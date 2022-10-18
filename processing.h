@@ -28,8 +28,8 @@ public:
         W2
     };
 
-    long getUserID() const;
-    void setUserID(long value);
+    int getUserID() const;
+    void setUserID(int value);
 
     int getStatus() const;
     void setStatus(int value);
@@ -49,16 +49,17 @@ public:
     std::string getPrintedBet();
     void reset();
 
+    double getKoef() const;
+    void setKoef(double value);
+
 private:
-    long userID;
+    int userID;
     int status;
     std::vector<Match> userMatches;
     Match match;
     int result;
+    double koef;
     int amount;
-
-
-
 };
 
 #endif // PROCESSING_H

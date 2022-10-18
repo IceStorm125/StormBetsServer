@@ -23,18 +23,22 @@ find_package(Qt5Sql)
 add_subdirectory(tgbot-cpp)
 
 add_executable(StormBetsServer
-  main.cpp
-  requester.h requester.cpp
-  match.h match.cpp
-  jsondataextractor.h jsondataextractor.cpp
-  keyboardcreator.h keyboardcreator.cpp
-  event.h
-  processing.h processing.cpp
-  messagestosend.h
-  messageeventsgenerator.hpp
-  regexmatcher.h regexmatcher.cpp
-  tests/test_regexmatcher.h tests/test_regexmatcher.cpp
-)
+    main.cpp
+    requester.h requester.cpp
+    match.h match.cpp
+    jsondataextractor.h jsondataextractor.cpp
+    keyboardcreator.h keyboardcreator.cpp
+    event.h
+    processing.h processing.cpp
+    messagestosend.h
+    messageeventsgenerator.hpp
+    regexmatcher.h regexmatcher.cpp
+    playerdto.h playerdto.cpp
+    tests/test_regexmatcher.h tests/test_regexmatcher.cpp
+    dto.h dto.cpp
+    betdto.h betdto.cpp
+    )
+
 target_link_libraries(StormBetsServer
     Qt5::Core
     Qt5::Test
@@ -43,4 +47,5 @@ target_link_libraries(StormBetsServer
     ${CMAKE_THREAD_LIBS_INIT}
     ${OPENSSL_LIBRARIES}
     ${Boost_LIBRARIES}
-    ${CURL_LIBRARIES})
+    ${CURL_LIBRARIES}
+    )

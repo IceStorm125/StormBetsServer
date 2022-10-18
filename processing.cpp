@@ -8,12 +8,12 @@ Processing::Processing(long userID_)
     status = Status::START;
 }
 
-long Processing::getUserID() const
+int Processing::getUserID() const
 {
     return userID;
 }
 
-void Processing::setUserID(long value)
+void Processing::setUserID(int value)
 {
     userID = value;
 }
@@ -86,6 +86,17 @@ void Processing::reset()
     match = Match();
     result = -1;
     amount = 0;
+    koef = 0;
+}
+
+double Processing::getKoef() const
+{
+    return koef;
+}
+
+void Processing::setKoef(double value)
+{
+    koef = value;
 }
 
 
