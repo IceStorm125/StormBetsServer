@@ -29,23 +29,25 @@ std::vector<Match> JsonDataExtractor::getUpcomingMatchesByTournamentID(int ID)
         QJsonDocument jsonResponce = QJsonDocument::fromJson(qstrResponce.toUtf8());
         QJsonObject jsonObject = jsonResponce.object().value("data").toObject();
         QJsonArray jsonArrayMatches = jsonObject.value("matches").toArray();
+
         for(const QJsonValue &match : jsonArrayMatches)
         {
             QDateTime matchTime = QDateTime::fromString(match["scheduled_at"].toString(), Qt::ISODate).toLocalTime();
             if(matchTime > QDateTime::currentDateTime())
             {
                 int matchID = match["id"].toInt();
-                QPair<Match, bool> matchObj = getMatchByID(matchID);
+                std::optional<Match> matchObj = getMatchByID(matchID);
 
-                if(matchObj.second)
-                    upcomingMatches.push_back(matchObj.first);
+                if(matchObj)
+                    upcomingMatches.push_back(matchObj.value());
             }
+
         }
     }
     return upcomingMatches;
 }
 
-QPair<Match, bool> JsonDataExtractor::getMatchByID(int ID)
+std::optional<Match> JsonDataExtractor::getMatchByID(int ID)
 {
     std::string URL{MATCH_URL};
     URL += std::to_string(ID);
@@ -57,67 +59,58 @@ QPair<Match, bool> JsonDataExtractor::getMatchByID(int ID)
         QJsonObject jsonObject = jsonResponce.object().value("data").toObject();
         QJsonArray jsonArrayMarkets = jsonObject.value("markets").toArray();
 
-        auto it = std::find_if(jsonArrayMarkets.constBegin(), jsonArrayMarkets.constEnd(), [](const QJsonValue &market ){
-            return market["name"].toString() == "Winner" && !market["is_live"].toBool();
+        auto itMatchesWithDraw = std::find_if(jsonArrayMarkets.constBegin(), jsonArrayMarkets.constEnd(), [](const QJsonValue &market ){
+            return (market["name"].toString() == "1x2" || market["name"].toString() == "Winner") && !market["is_live"].toBool();
         });
 
-        if(it != jsonArrayMarkets.constEnd())
+        if(itMatchesWithDraw != jsonArrayMarkets.constEnd())
         {
             QJsonArray jsonArrayCompetitors = jsonObject.value("competitors").toArray();
+
+            if(!jsonArrayCompetitors.size())
+                return std::nullopt;
+
             std::map<QString, QString> teamsNames;
-            teamsNames.insert({"{$competitor1}", jsonArrayCompetitors.at(0)["name"].toString()});
-            teamsNames.insert({"{$competitor2}", jsonArrayCompetitors.at(1)["name"].toString()});
+            teamsNames.insert({COMPETITOR_1, jsonArrayCompetitors.at(0)["name"].toString()});
+            teamsNames.insert({COMPETITOR_2, jsonArrayCompetitors.at(1)["name"].toString()});
 
-            QJsonValue jsonValueOdds = *it;
+            QJsonValue jsonValueOdds = *itMatchesWithDraw;
             QJsonArray jsonOutcomes = jsonValueOdds["outcomes"].toArray();
+            if(!jsonOutcomes.size())
+                return std::nullopt;
 
-            if(jsonOutcomes.empty())
-                return {Match(), false};
-
-            QString name1 = teamsNames.at(jsonOutcomes.at(0)["name"].toString());
-            QString name2 = teamsNames.at(jsonOutcomes.at(1)["name"].toString());
-
-            double koef1 = jsonOutcomes.at(0)["odds"].toDouble();
-            double koef2 = jsonOutcomes.at(1)["odds"].toDouble();
-
-            QDateTime matchTime = QDateTime::fromString(jsonObject["scheduled_at"].toString(), Qt::ISODate).addSecs(3*60*60);
-            return {Match(ID, name1, name2, koef1, koef2, 0,matchTime), true};
-        }
-        else
-        {
-            auto it2 = std::find_if(jsonArrayMarkets.constBegin(), jsonArrayMarkets.constEnd(), [](const QJsonValue &market ){
-                return market["name"].toString() == "1x2" && !market["is_live"].toBool();
+            auto itName1 = std::find_if(jsonOutcomes.constBegin(), jsonOutcomes.constEnd(), [this](const QJsonValue &outcome) {
+                return outcome["name"] == COMPETITOR_1;
             });
 
-            if(it2 != jsonArrayMarkets.constEnd())
-            {
-                QJsonArray jsonArrayCompetitors = jsonObject.value("competitors").toArray();
-                std::map<QString, QString> teamsNames;
-                teamsNames.insert({"{$competitor1}", jsonArrayCompetitors.at(0)["name"].toString()});
-                teamsNames.insert({"{$competitor2}", jsonArrayCompetitors.at(1)["name"].toString()});
+            auto itName2 = std::find_if(jsonOutcomes.constBegin(), jsonOutcomes.constEnd(), [this](const QJsonValue &outcome) {
+                return outcome["name"] == COMPETITOR_2;
+            });
 
-                QJsonValue jsonValueOdds = *it2;
-                QJsonArray jsonOutcomes = jsonValueOdds["outcomes"].toArray();
+            auto itDraw = std::find_if(jsonOutcomes.constBegin(), jsonOutcomes.constEnd(), [this](const QJsonValue &outcome) {
+                return outcome["name"] == DRAW;
+            });
 
-                if(jsonOutcomes.empty())
-                    return {Match(), false};
+            size_t name1index = std::distance(jsonOutcomes.constBegin(), itName1);
+            size_t name2index = std::distance(jsonOutcomes.constBegin(), itName2);
+            size_t nameDraw = std::distance( jsonOutcomes.constBegin(), itDraw);
 
-                QString name1 = teamsNames.at(jsonOutcomes.at(1)["name"].toString());
-                QString name2 = teamsNames.at(jsonOutcomes.at(2)["name"].toString());
+            qInfo() << name1index << name2index << nameDraw;
 
-                double koefDraw = jsonOutcomes.at(0)["odds"].toDouble();
-                double koef1 = jsonOutcomes.at(1)["odds"].toDouble();
-                double koef2 = jsonOutcomes.at(2)["odds"].toDouble();
+            QString name1 = teamsNames.find(COMPETITOR_1)->second;
+            QString name2 = teamsNames.find(COMPETITOR_2)->second;
 
-                QDateTime matchTime = QDateTime::fromString(jsonObject["scheduled_at"].toString(), Qt::ISODate).addSecs(3*60*60);
-                return {Match(ID, name1, name2, koef1, koef2, koefDraw, matchTime), true};
-            }
+            qInfo() << name1 << name2;
+
+            double koefDraw = jsonOutcomes.at(nameDraw)["odds"].toDouble();
+            double koef1 = jsonOutcomes.at(name1index)["odds"].toDouble();
+            double koef2 = jsonOutcomes.at(name2index)["odds"].toDouble();
+
+            QDateTime matchTime = QDateTime::fromString(jsonObject["scheduled_at"].toString(), Qt::ISODate).addSecs(3*60*60);
+            return Match(ID, name1, name2, koef1, koef2, koefDraw, matchTime);
         }
-
-
     }
-
-    return {Match(), false};
+    return std::nullopt;
 }
 
 

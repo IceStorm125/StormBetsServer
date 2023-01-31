@@ -79,7 +79,7 @@ int main(int argc, char *argv[])
                 {
                     it->setStatus(Processing::Status::CHOOSING_MATCH);
                     bot.getApi().sendMessage(chatID, Messages::LOADING, 0, false, ptrForRemoveKeyboard);
-                    std::vector<Match> matches = extractor.getUpcomingMatchesByTournamentID(5288);
+                    std::vector<Match> matches = extractor.getUpcomingMatchesByTournamentID(3473);
                     if(matches.empty())
                     {
                         bot.getApi().sendMessage(chatID, Messages::NO_MATCHES, 0, false, ptrForRemoveKeyboard);
@@ -147,7 +147,7 @@ int main(int argc, char *argv[])
                 break;
             }
             case Processing::Status::CHOOSING_WINNER:{
-                if(const Match match = extractor.getMatchByID(it->getMatch().getID()).first; message->text == match.getTeam1().first.toStdString())
+                if(const Match match = extractor.getMatchByID(it->getMatch().getID()).value(); message->text == match.getTeam1().first.toStdString())
                 {
                     it->setResult(Processing::Result::W1);
                     it->setKoef(match.getTeam1().second);
