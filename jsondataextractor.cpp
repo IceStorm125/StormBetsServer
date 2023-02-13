@@ -10,6 +10,10 @@
 
 #include <map>
 #include <algorithm>
+#include <iostream>
+#include <thread>
+
+#include "requester.h"
 
 JsonDataExtractor::JsonDataExtractor()
 {
@@ -23,6 +27,7 @@ std::vector<Match> JsonDataExtractor::getUpcomingMatchesByTournamentID(int ID)
 
     std::vector<Match> upcomingMatches;
 
+    Requester requester;
     if(std::string matchesResponce; requester.getJsonDataFromURL(URL, matchesResponce) == 200)
     {
         QString qstrResponce = QString::fromUtf8(matchesResponce.c_str());
@@ -30,21 +35,38 @@ std::vector<Match> JsonDataExtractor::getUpcomingMatchesByTournamentID(int ID)
         QJsonObject jsonObject = jsonResponce.object().value("data").toObject();
         QJsonArray jsonArrayMatches = jsonObject.value("matches").toArray();
 
+        std::vector<std::thread> threads;
+
         for(const QJsonValue &match : jsonArrayMatches)
         {
-            QDateTime matchTime = QDateTime::fromString(match["scheduled_at"].toString(), Qt::ISODate).toLocalTime();
-            if(matchTime > QDateTime::currentDateTime())
-            {
-                int matchID = match["id"].toInt();
-                std::optional<Match> matchObj = getMatchByID(matchID);
+            threads.push_back(std::thread(&JsonDataExtractor::addMatchToVectorOfMatches, this, std::ref(upcomingMatches), match));
+        }
 
-                if(matchObj)
-                    upcomingMatches.push_back(matchObj.value());
-            }
-
+        for(auto &thread: threads)
+        {
+            thread.join();
         }
     }
+    std::sort(upcomingMatches.begin(), upcomingMatches.end(),[](const Match &m1, const Match &m2){
+        return m1.getTime() <= m2.getTime();
+    });
     return upcomingMatches;
+}
+
+void JsonDataExtractor::addMatchToVectorOfMatches(std::vector<Match> &matches, QJsonValue match)
+{
+    QDateTime matchTime = QDateTime::fromString(match["scheduled_at"].toString(), Qt::ISODate).toLocalTime();
+
+    if(matchTime > QDateTime::currentDateTime())
+    {
+        int matchID = match["id"].toInt();
+        std::optional<Match> matchObj = getMatchByID(matchID);
+
+        if(matchObj)
+        {
+            matches.push_back(matchObj.value());
+        }
+    }
 }
 
 std::optional<Match> JsonDataExtractor::getMatchByID(int ID)
@@ -52,6 +74,7 @@ std::optional<Match> JsonDataExtractor::getMatchByID(int ID)
     std::string URL{MATCH_URL};
     URL += std::to_string(ID);
 
+    Requester requester;
     if(std::string matchResponce; requester.getJsonDataFromURL(URL, matchResponce) == 200)
     {
         QString qstrResponce = QString::fromUtf8(matchResponce.c_str());
@@ -59,11 +82,11 @@ std::optional<Match> JsonDataExtractor::getMatchByID(int ID)
         QJsonObject jsonObject = jsonResponce.object().value("data").toObject();
         QJsonArray jsonArrayMarkets = jsonObject.value("markets").toArray();
 
-        auto itMatchesWithDraw = std::find_if(jsonArrayMarkets.constBegin(), jsonArrayMarkets.constEnd(), [](const QJsonValue &market ){
+        auto it = std::find_if(jsonArrayMarkets.constBegin(), jsonArrayMarkets.constEnd(), [](const QJsonValue &market ){
             return (market["name"].toString() == "1x2" || market["name"].toString() == "Winner") && !market["is_live"].toBool();
         });
 
-        if(itMatchesWithDraw != jsonArrayMarkets.constEnd())
+        if(it != jsonArrayMarkets.constEnd())
         {
             QJsonArray jsonArrayCompetitors = jsonObject.value("competitors").toArray();
 
@@ -74,7 +97,7 @@ std::optional<Match> JsonDataExtractor::getMatchByID(int ID)
             teamsNames.insert({COMPETITOR_1, jsonArrayCompetitors.at(0)["name"].toString()});
             teamsNames.insert({COMPETITOR_2, jsonArrayCompetitors.at(1)["name"].toString()});
 
-            QJsonValue jsonValueOdds = *itMatchesWithDraw;
+            QJsonValue jsonValueOdds = *it;
             QJsonArray jsonOutcomes = jsonValueOdds["outcomes"].toArray();
             if(!jsonOutcomes.size())
                 return std::nullopt;
@@ -95,12 +118,8 @@ std::optional<Match> JsonDataExtractor::getMatchByID(int ID)
             size_t name2index = std::distance(jsonOutcomes.constBegin(), itName2);
             size_t nameDraw = std::distance( jsonOutcomes.constBegin(), itDraw);
 
-            qInfo() << name1index << name2index << nameDraw;
-
             QString name1 = teamsNames.find(COMPETITOR_1)->second;
             QString name2 = teamsNames.find(COMPETITOR_2)->second;
-
-            qInfo() << name1 << name2;
 
             double koefDraw = jsonOutcomes.at(nameDraw)["odds"].toDouble();
             double koef1 = jsonOutcomes.at(name1index)["odds"].toDouble();

@@ -2,6 +2,8 @@
 #include <iostream>
 #include <memory>
 
+#include <QDebug>
+
 namespace
 {
 std::size_t callback(
