@@ -37,6 +37,7 @@ add_executable(StormBetsServer
     tests/test_regexmatcher.h tests/test_regexmatcher.cpp
     dto.h dto.cpp
     betdto.h betdto.cpp
+    admindto.h admindto.cpp
     )
 
 target_link_libraries(StormBetsServer

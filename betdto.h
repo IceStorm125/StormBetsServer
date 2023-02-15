@@ -4,6 +4,7 @@
 #include <string>
 #include "dto.h"
 #include "processing.h"
+#include "match.h"
 
 class BetDTO : public DTO
 {
@@ -15,12 +16,16 @@ public:
 
     std::string playerCurrentBets();
 
+
 private:
     int chatID;
 
     int getMatchResultID(const Processing &bet);
     int getMatchID(const Processing &bet);
     void addMatch(const Processing &bet);
+
+
+
 };
 
 

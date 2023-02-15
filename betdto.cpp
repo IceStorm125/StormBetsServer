@@ -113,3 +113,4 @@ void BetDTO::addMatch(const Processing &bet)
     query.bindValue(":time", bet.getMatch().getTime());
     exec(query);
 }
+

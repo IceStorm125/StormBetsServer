@@ -10,6 +10,8 @@
 #include <vector>
 #include <algorithm>
 
+#include <boost/algorithm/string.hpp>
+
 #include "tgbot/tgbot.h"
 
 #include "processing.h"
@@ -21,7 +23,7 @@
 #include "regexmatcher.h"
 #include "playerdto.h"
 #include "betdto.h"
-
+#include "admindto.h"
 #include "tests/test_regexmatcher.h"
 
 int main(int argc, char *argv[])
@@ -29,18 +31,27 @@ int main(int argc, char *argv[])
     using namespace TgBot;
 
     const std::string TOKEN = "5197186113:AAFtm1pkRcWgssxEgW2XphepTkIGWDCHNx0";
+    const long ADMIN_ID = 427038898;
+    bool adminIsWorking = false;
+    int tournamentID = 3465;
 
     Bot bot(TOKEN);
 
+
     JsonDataExtractor extractor;
     std::vector<Processing> currentProceses;
+
     ReplyKeyboardRemove::Ptr ptrForRemoveKeyboard(new ReplyKeyboardRemove);
 
     std::vector<BotCommand::Ptr> commands;
     BotCommand::Ptr cmdArray1(new BotCommand);
+    BotCommand::Ptr cmdArray2(new BotCommand);
     cmdArray1->command = "start";
     cmdArray1->description = "Start using bot";
+    cmdArray2->command = "admin";
+    cmdArray2->description = "Only for admin";
     commands.push_back(cmdArray1);
+    commands.push_back(cmdArray2);
     bot.getApi().setMyCommands(commands);
 
     bot.getEvents().onCommand("start", [&bot, &currentProceses](Message::Ptr message) {
@@ -58,12 +69,28 @@ int main(int argc, char *argv[])
         currentProceses.push_back(Processing(chatID));
     });
 
-    bot.getEvents().onAnyMessage([&bot, &extractor, &currentProceses, &ptrForRemoveKeyboard](Message::Ptr message) {
+    bot.getEvents().onCommand("admin", [&bot, &adminIsWorking, &ptrForRemoveKeyboard](Message::Ptr message) {
+        const long chatID{message->chat->id};
+
+        if(chatID != ADMIN_ID)
+            return;
+
+        adminIsWorking = true;
+
+        AdminDTO dto;
+        std::string matchesInfo = dto.getAllMatchesWithoutResult();
+
+        bot.getApi().sendMessage(chatID, matchesInfo.size() ? matchesInfo : "No matches", false, 0, ptrForRemoveKeyboard);
+    });
+
+    bot.getEvents().onAnyMessage([&bot, &extractor, &currentProceses, &ptrForRemoveKeyboard, &tournamentID, &adminIsWorking](Message::Ptr message) {
         const long chatID{message->chat->id};
 
         if(QString::fromStdString(message->text).startsWith("/"))
             return;
 
+        if(adminIsWorking && chatID == ADMIN_ID)
+            return;
 
         if(auto it = std::find_if(currentProceses.begin(), currentProceses.end(),[chatID](Processing &p){ return chatID == p.getUserID(); }); it == currentProceses.end())
         {
@@ -79,7 +106,7 @@ int main(int argc, char *argv[])
                 {
                     it->setStatus(Processing::Status::CHOOSING_MATCH);
                     bot.getApi().sendMessage(chatID, Messages::LOADING, 0, false, ptrForRemoveKeyboard);
-                    std::vector<Match> matches = extractor.getUpcomingMatchesByTournamentID(3473);
+                    std::vector<Match> matches = extractor.getUpcomingMatchesByTournamentID(tournamentID);
                     if(matches.empty())
                     {
                         bot.getApi().sendMessage(chatID, Messages::NO_MATCHES, 0, false, ptrForRemoveKeyboard);
@@ -182,18 +209,17 @@ int main(int argc, char *argv[])
                 {
                     bot.getApi().sendMessage(chatID, Messages::INPUT_AMOUNT, 0, false, ptrForRemoveKeyboard);
                     break;
-
                 }
 
                 PlayerDTO dto(chatID);
                 int coins = dto.getCoins();
                 int amount = std::stoi(message->text);
+
                 if(coins < amount)
                 {
                     bot.getApi().sendMessage(chatID, Messages::NO_COINS);
                     break;
                 }
-
 
                 it->setAmount(amount);
                 it->setStatus(Processing::Status::ACCEPTING);
@@ -233,6 +259,38 @@ int main(int argc, char *argv[])
             }
             }
         }
+    });
+
+    // Admin pannel
+    bot.getEvents().onAnyMessage([&adminIsWorking](Message::Ptr message) {
+        const long chatID{message->chat->id};
+
+        if(chatID == ADMIN_ID && adminIsWorking)
+        {
+            std::string strMessage = message->text;
+
+            if(strMessage == "End")
+            {
+                adminIsWorking = false;
+                return;
+            }
+
+
+
+            boost::trim(strMessage);
+            std::vector<std::string> values;
+            boost::split(values, strMessage, boost::is_any_of(" "), boost::token_compress_on);
+
+            if(!RegexMatcher::isStringPositiveNumber(values.at(0)))
+                return;
+
+            int matchID = std::stoi(values.at(0));
+            std::string result = values.at(1);
+            AdminDTO dto;
+            dto.updateResult(matchID, result);
+
+        }
+
     });
 
     signal(SIGINT, [](int s) {

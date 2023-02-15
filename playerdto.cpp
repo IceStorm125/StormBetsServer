@@ -36,15 +36,17 @@ bool PlayerDTO::updateCoins(int coins)
     query.prepare(cmd);
     query.bindValue(":coins", coins);
     query.bindValue(":id", chatID);
+
     return exec(query);
 }
 
 bool PlayerDTO::add(const std::string &firstName, const std::string &lastName)
 {
-    QString cmd("INSERT INTO players VALUES(:id, 10000, :firstName, :lastName)");
+    QString cmd("INSERT INTO players VALUES(:id, :coins, :firstName, :lastName)");
     QSqlQuery query;
     query.prepare(cmd);
     query.bindValue(":id", chatID);
+    query.bindValue(":coins", START_COINS);
     query.bindValue(":firstName", QString::fromStdString(firstName));
     query.bindValue(":lastName", QString::fromStdString(lastName));
 
