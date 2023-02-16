@@ -65,21 +65,21 @@ bool AdminDTO::updateCoins(int matchID)
         int match_result_id_from_bets = record.value(2).toInt();
         long player_id = record.value(3).toLongLong();
 
-        QString cmd = "SELECT match_result_id FROM matches WHERE id = :matchID";
-        QSqlQuery query;
-        query.prepare(cmd);
-        query.bindValue(":matchID", matchID);
-        exec(query);
+        QString selectIDcmd = "SELECT match_result_id FROM matches WHERE id = :matchID";
+        QSqlQuery selectIDquery;
+        selectIDquery.prepare(selectIDcmd);
+        selectIDquery.bindValue(":matchID", matchID);
+        exec(selectIDquery);
 
-        if (query.next())
+        if (selectIDquery.next())
         {
-            QSqlRecord record = query.record();
+            QSqlRecord record = selectIDquery.record();
             int match_result_id = record.value(0).toInt();
 
             if(match_result_id_from_bets == match_result_id)
             {
                 PlayerDTO dto(player_id);
-                dto.updateCoins(dto.getCoins() + (amount * koef));
+                dto.updateCoins(dto.getCoins() + round(amount * koef));
             }
         }
     }
