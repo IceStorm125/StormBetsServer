@@ -79,7 +79,7 @@ int main(int argc, char *argv[])
 
         AdminDTO dto;
         std::string matchesInfo = dto.getAllMatchesWithoutResult();
-
+        bot.getApi().sendMessage(chatID, "Using: <matchID> <W1|W2|X>", false, 0, ptrForRemoveKeyboard);
         bot.getApi().sendMessage(chatID, matchesInfo.size() ? matchesInfo : "No matches", false, 0, ptrForRemoveKeyboard);
     });
 
@@ -262,7 +262,7 @@ int main(int argc, char *argv[])
     });
 
     // Admin pannel
-    bot.getEvents().onAnyMessage([&adminIsWorking](Message::Ptr message) {
+    bot.getEvents().onAnyMessage([&bot, &adminIsWorking](Message::Ptr message) {
         const long chatID{message->chat->id};
 
         if(chatID == ADMIN_ID && adminIsWorking)
@@ -275,22 +275,31 @@ int main(int argc, char *argv[])
                 return;
             }
 
-
-
             boost::trim(strMessage);
             std::vector<std::string> values;
             boost::split(values, strMessage, boost::is_any_of(" "), boost::token_compress_on);
 
-            if(!RegexMatcher::isStringPositiveNumber(values.at(0)))
+            if(values.size() != 2)
+            {
+                bot.getApi().sendMessage(chatID, "Bad input values");
                 return;
+            }
+            if(!RegexMatcher::isStringPositiveNumber(values.at(0)))
+            {
+                bot.getApi().sendMessage(chatID, "Bad first value");
+                return;
+            }
+            if(values.at(1) != "W1" && values.at(1) != "W2" && values.at(1) != "X")
+            {
+                bot.getApi().sendMessage(chatID, "Bad second value");
+                return;
+            }
 
             int matchID = std::stoi(values.at(0));
             std::string result = values.at(1);
             AdminDTO dto;
             dto.updateResult(matchID, result);
-
         }
-
     });
 
     signal(SIGINT, [](int s) {
