@@ -21,9 +21,9 @@
 #include "messagestosend.h"
 #include "messageeventsgenerator.hpp"
 #include "regexmatcher.h"
-#include "playerdto.h"
-#include "betdto.h"
-#include "admindto.h"
+#include "dtos/playerdto.h"
+#include "dtos/betdto.h"
+#include "dtos/admindto.h"
 #include "tests/test_regexmatcher.h"
 
 int main(int argc, char *argv[])

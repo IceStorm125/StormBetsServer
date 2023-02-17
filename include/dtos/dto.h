@@ -2,7 +2,7 @@
 #define DTO_H
 #include <QSqlQuery>
 #include <QSqlDatabase>
-
+#include "dbconnection.h"
 class DTO
 {
 public:
@@ -10,8 +10,8 @@ public:
     ~DTO();
 private:
     QSqlDatabase db;
+
 protected:
-    void open();
     void begin();
     void rollBack();
     void commit();

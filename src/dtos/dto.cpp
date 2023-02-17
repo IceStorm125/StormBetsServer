@@ -4,28 +4,12 @@
 
 DTO::DTO()
 {
-    open();
+    db = DBconnection::getInstance().getDB();
 }
 
 DTO::~DTO()
 {
-   db.close();
-}
-
-void DTO::open()
-{
-    db = QSqlDatabase::addDatabase("QMYSQL");
-    db.setHostName("localhost");
-    db.setDatabaseName("my_schema");
-    db.setUserName("root");
-    db.setPassword("root");
-
-    if(!db.open())
-    {
-        qInfo() << "DB is not open";
-        qInfo() << db.lastError().text();
-    }
-    qInfo() << "DB is open";
+    //db.close();
 }
 
 void DTO::begin()

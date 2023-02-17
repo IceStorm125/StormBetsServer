@@ -41,6 +41,7 @@ set(include_files
     include/dtos/dto.h
     include/dtos/betdto.h
     include/dtos/admindto.h
+    include/dbconnection.h
    )
 
 set(source_files
@@ -55,12 +56,17 @@ set(source_files
     src/dtos/dto.cpp
     src/dtos/betdto.cpp
     src/dtos/admindto.cpp
+    src/dbconnection.cpp
+)
+
+set(tests
+    tests/test_regexmatcher.h tests/test_regexmatcher.cpp
 )
 
 add_executable(StormBetsServer
     ${source_files}
     ${include_files}
-    tests/test_regexmatcher.h tests/test_regexmatcher.cpp
+    ${tests}
     )
 
 target_link_libraries(StormBetsServer

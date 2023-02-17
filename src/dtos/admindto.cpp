@@ -1,5 +1,4 @@
-#include "dtos/admindto.h"
-#include "dtos/playerdto.h"
+
 
 #include <QDebug>
 #include <QtSql>
@@ -9,7 +8,8 @@
 
 #include <sstream>
 
-
+#include "dtos/playerdto.h"
+#include "dtos/admindto.h"
 
 AdminDTO::AdminDTO()
 {
@@ -47,7 +47,7 @@ bool AdminDTO::updateResult(int matchID, const std::string &result)
     query.bindValue(":result", QString::fromStdString(result));
     exec(query);
 
-    updateCoins(matchID);
+    return updateCoins(matchID);
 }
 
 bool AdminDTO::updateCoins(int matchID)
@@ -57,13 +57,15 @@ bool AdminDTO::updateCoins(int matchID)
     selectBetsQuery.prepare(selectBetsCmd);
     selectBetsQuery.bindValue(":matchID", matchID);
     exec(selectBetsQuery);
+    qInfo() << selectBetsQuery.size();
 
-    while (selectBetsQuery.next())
+    while(selectBetsQuery.next())
     {
         QSqlRecord record = selectBetsQuery.record();
-        int amount = record.value(0).toInt();
+        int amount = record.value(0).toInt();      
         double koef = record.value(1).toDouble();
         int match_result_id_from_bets = record.value(2).toInt();
+        qInfo() << amount << match_result_id_from_bets;
         long player_id = record.value(3).toLongLong();
 
         QString selectIDcmd = "SELECT match_result_id FROM matches WHERE id = :matchID";
@@ -72,16 +74,19 @@ bool AdminDTO::updateCoins(int matchID)
         selectIDquery.bindValue(":matchID", matchID);
         exec(selectIDquery);
 
-        if (selectIDquery.next())
+        if(selectIDquery.next())
         {
             QSqlRecord record = selectIDquery.record();
             int match_result_id = record.value(0).toInt();
 
             if(match_result_id_from_bets == match_result_id)
             {
+                qInfo() << "Updated";
                 PlayerDTO dto(player_id);
                 dto.updateCoins(dto.getCoins() + round(amount * koef));
             }
         }
     }
+
+    return true;
 }
