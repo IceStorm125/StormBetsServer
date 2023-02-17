@@ -1,4 +1,5 @@
-#include "betdto.h"
+#include "dtos/betdto.h"
+
 #include <QDebug>
 #include <QtSql>
 #include <QSqlDatabase>

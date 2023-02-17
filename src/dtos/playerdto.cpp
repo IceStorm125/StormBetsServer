@@ -1,4 +1,4 @@
-#include "playerdto.h"
+#include "dtos/playerdto.h"
 
 #include <QDebug>
 #include <QtSql>

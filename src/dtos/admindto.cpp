@@ -1,4 +1,5 @@
-#include "admindto.h"
+#include "dtos/admindto.h"
+#include "dtos/playerdto.h"
 
 #include <QDebug>
 #include <QtSql>
@@ -8,7 +9,7 @@
 
 #include <sstream>
 
-#include "playerdto.h"
+
 
 AdminDTO::AdminDTO()
 {

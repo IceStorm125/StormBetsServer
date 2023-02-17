@@ -22,22 +22,45 @@ find_package(Qt5Sql)
 
 add_subdirectory(tgbot-cpp)
 
+include_directories(
+    include
+    include/*
+    )
+
+set(include_files
+    include/requester.h
+    include/match.h
+    include/jsondataextractor.h
+    include/keyboardcreator.h
+    include/event.h
+    include/processing.h
+    include/messagestosend.h
+    include/messageeventsgenerator.hpp
+    include/dtos/playerdto.h
+    include/regexmatcher.h
+    include/dtos/dto.h
+    include/dtos/betdto.h
+    include/dtos/admindto.h
+   )
+
+set(source_files
+    src/main.cpp
+    src/requester.cpp
+    src/match.cpp
+    src/jsondataextractor.cpp
+    src/keyboardcreator.cpp
+    src/processing.cpp
+    src/regexmatcher.cpp
+    src/dtos/playerdto.cpp
+    src/dtos/dto.cpp
+    src/dtos/betdto.cpp
+    src/dtos/admindto.cpp
+)
+
 add_executable(StormBetsServer
-    main.cpp
-    requester.h requester.cpp
-    match.h match.cpp
-    jsondataextractor.h jsondataextractor.cpp
-    keyboardcreator.h keyboardcreator.cpp
-    event.h
-    processing.h processing.cpp
-    messagestosend.h
-    messageeventsgenerator.hpp
-    regexmatcher.h regexmatcher.cpp
-    playerdto.h playerdto.cpp
+    ${source_files}
+    ${include_files}
     tests/test_regexmatcher.h tests/test_regexmatcher.cpp
-    dto.h dto.cpp
-    betdto.h betdto.cpp
-    admindto.h admindto.cpp
     )
 
 target_link_libraries(StormBetsServer
@@ -50,3 +73,4 @@ target_link_libraries(StormBetsServer
     ${Boost_LIBRARIES}
     ${CURL_LIBRARIES}
     )
+
