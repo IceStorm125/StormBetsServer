@@ -1,4 +1,4 @@
-#include "test_regexmatcher.h"
+#include "tests/test_regexmatcher.h"
 
 #include <QTest>
 Test_RegexMatcher::Test_RegexMatcher()
