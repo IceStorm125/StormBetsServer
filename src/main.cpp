@@ -26,6 +26,13 @@
 #include "dtos/admindto.h"
 #include "tests/test_regexmatcher.h"
 
+enum Tournaments
+{
+    ENGLISH_LEAGUE = 3465,
+    CHAMPIONS_LEAGUE = 3465,
+    LIMA_MAJOR = 7200
+};
+
 int main(int argc, char *argv[])
 {
     using namespace TgBot;
@@ -33,8 +40,6 @@ int main(int argc, char *argv[])
     const std::string TOKEN = "5197186113:AAFtm1pkRcWgssxEgW2XphepTkIGWDCHNx0";
     const long ADMIN_ID = 427038898;
     bool adminIsWorking = false;
-    const int ENGLAND_LEAGUE = 3465;
-    const int BLAST = 7201;
 
     Bot bot(TOKEN);
 
@@ -84,7 +89,7 @@ int main(int argc, char *argv[])
         bot.getApi().sendMessage(chatID, matchesInfo.size() ? matchesInfo : "No matches", false, 0, ptrForRemoveKeyboard);
     });
 
-    bot.getEvents().onAnyMessage([&bot, &extractor, &currentProceses, &ptrForRemoveKeyboard, &BLAST, &adminIsWorking](Message::Ptr message) {
+    bot.getEvents().onAnyMessage([&bot, &extractor, &currentProceses, &ptrForRemoveKeyboard, &adminIsWorking](Message::Ptr message) {
         const long chatID{message->chat->id};
 
         if(QString::fromStdString(message->text).startsWith("/"))
@@ -107,7 +112,7 @@ int main(int argc, char *argv[])
                 {
                     it->setStatus(Processing::Status::CHOOSING_MATCH);
                     bot.getApi().sendMessage(chatID, Messages::LOADING, 0, false, ptrForRemoveKeyboard);
-                    std::vector<Match> matches = extractor.getUpcomingMatchesByTournamentID(BLAST);
+                    std::vector<Match> matches = extractor.getUpcomingMatchesByTournamentID(Tournaments::CHAMPIONS_LEAGUE);
                     if(matches.empty())
                     {
                         bot.getApi().sendMessage(chatID, Messages::NO_MATCHES, 0, false, ptrForRemoveKeyboard);
