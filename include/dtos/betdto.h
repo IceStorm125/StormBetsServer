@@ -15,6 +15,7 @@ public:
     bool confirm(const Processing &bet);
 
     std::string playerCurrentBets();
+    std::string playerPlayedBets();
 
 
 private:

@@ -1,4 +1,5 @@
 #include "dtos/betdto.h"
+#include "messagestosend.h"
 
 #include <QDebug>
 #include <QtSql>
@@ -20,8 +21,8 @@ bool BetDTO::confirm(const Processing &bet)
                 "VALUES(:amount, :koef, :match_result_id, :match_id, :player_id)");
     QSqlQuery query;
     query.prepare(cmd);
-    query.bindValue(":amount",bet.getAmount());
-    query.bindValue(":koef",bet.getKoef());
+    query.bindValue(":amount", bet.getAmount());
+    query.bindValue(":koef", bet.getKoef());
     query.bindValue(":match_result_id", getMatchResultID(bet));
     query.bindValue(":match_id", getMatchID(bet));
     query.bindValue(":player_id", chatID);
@@ -31,9 +32,11 @@ bool BetDTO::confirm(const Processing &bet)
 
 std::string BetDTO::playerCurrentBets()
 {
-    QString cmd = "SELECT bets.amount, bets.koef, match_results.name, matches.team1, matches.team2, matches.time FROM bets "
-                  "JOIN (matches, match_results) ON (matches.id = bets.match_id AND match_results.id = bets.match_result_id) "
-                  "WHERE player_id = :chatID;";
+    QString cmd = "SELECT b.amount, b.koef, mr.name, m.team1, m.team2, m.time FROM bets b "
+                  "JOIN (matches m, match_results mr) ON (m.id = b.match_id AND mr.id = b.match_result_id) "
+                  "WHERE player_id = :chatID AND m.match_result_id IS NULL "
+                  "ORDER BY m.time DESC "
+                  "LIMIT 10;";
     QSqlQuery query;
     query.prepare(cmd);
     query.bindValue(":chatID", chatID);
@@ -51,11 +54,55 @@ std::string BetDTO::playerCurrentBets()
         QString time = record.value(5).toString();
 
         ss << team1.toStdString() << " vs " << team2.toStdString() << "\n"
-           << "Result: " << matchRes.toStdString() << "\n"
-           << "Amount: " << amount << "\n"
-           << "Koef: " << koef << "\n"
-           << "Potential gain: " << static_cast<int>(amount * koef) << "\n"
+           << "Result: " << matchRes.toStdString() << "(" << koef << ")\n"
+           << "Bet: " << amount << " -> " << static_cast<int>(amount * koef) << "\n"
            << "Time: " << time.toStdString() << "\n\n";
+    }
+
+    return ss.str();
+}
+
+std::string BetDTO::playerPlayedBets()
+{
+    QString cmd = "SELECT b.amount, b.koef, b.match_result_id, m.team1, m.team2, m.match_result_id, mr.name, br.name FROM bets b "
+                  "JOIN (matches m, match_results br, match_results mr) ON (m.id = b.match_id AND br.id = b.match_result_id AND mr.id = m.match_result_id) "
+                  "WHERE player_id = :chatID AND m.match_result_id IS NOT NULL "
+                  "ORDER BY m.time DESC "
+                  "LIMIT 10;";
+    QSqlQuery query;
+    query.prepare(cmd);
+    query.bindValue(":chatID", chatID);
+    exec(query);
+
+    std::stringstream ss;
+    ss << "Last played bets\n\n";
+
+    while (query.next())
+    {
+        QSqlRecord record = query.record();
+        int amount = record.value(0).toInt();
+        double koef = record.value(1).toDouble();
+        int betResID = record.value(2).toInt();
+        QString team1 = record.value(3).toString();
+        QString team2 = record.value(4).toString();
+        int matchResID = record.value(5).toInt();
+        QString choosedRes = record.value(6).toString();
+        QString matchRes = record.value(7).toString();
+
+        if(betResID == matchResID)
+        {
+            ss << team1.toStdString() << " vs " << team2.toStdString() << "(" << matchRes.toStdString() << ")" << "\n"
+               << "Bet: " << amount << " on " << choosedRes.toStdString() << "(" << koef << ")\n"
+               << "Result: " << Emojis::CHECK_MARK << "\n"
+               << "Coins change: " << "+" << static_cast<int>(amount * koef) << "\n\n";
+        }
+        else
+        {
+            ss << team1.toStdString() << " vs " << team2.toStdString() << "(" << matchRes.toStdString() << ")" << "\n"
+               << "Bet: " << amount << " on " << choosedRes.toStdString() << "(" << koef << ")\n"
+               << "Result: " << Emojis::CROSS_MARK << "\n"
+               << "Coins change: " << "-" << amount << "\n\n";
+        }
     }
 
     return ss.str();

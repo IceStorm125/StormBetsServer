@@ -64,7 +64,7 @@ int main(int argc, char *argv[])
         const long chatID{message->chat->id};
 
         ReplyKeyboardMarkup::Ptr kb(new ReplyKeyboardMarkup);
-        KeyboardCreator::createOneColumnKeyboard({Messages::PLACE_BET, Messages::CURRENT_BETS, Messages::COINS}, kb);
+        KeyboardCreator::createOneColumnKeyboard({Messages::PLACE_BET, Messages::CURRENT_BETS, Messages::PLAYED_BETS, Messages::COINS}, kb);
         bot.getApi().sendMessage(chatID, Messages::CHOOSE_OPTION, 0, false, kb);
 
         if(auto it = std::remove_if(currentProceses.begin(), currentProceses.end(),[chatID](Processing &p){ return chatID == p.getUserID(); }); it != currentProceses.end())
@@ -112,7 +112,7 @@ int main(int argc, char *argv[])
                 {
                     it->setStatus(Processing::Status::CHOOSING_MATCH);
                     bot.getApi().sendMessage(chatID, Messages::LOADING, 0, false, ptrForRemoveKeyboard);
-                    std::vector<Match> matches = extractor.getUpcomingMatchesByTournamentID(Tournaments::CHAMPIONS_LEAGUE);
+                    std::vector<Match> matches = extractor.getUpcomingMatchesByTournamentID(Tournaments::LIMA_MAJOR);
                     if(matches.empty())
                     {
                         bot.getApi().sendMessage(chatID, Messages::NO_MATCHES, 0, false, ptrForRemoveKeyboard);
@@ -147,9 +147,15 @@ int main(int argc, char *argv[])
                     const int coins = dto.getCoins();
                     bot.getApi().sendMessage(chatID, std::to_string(coins));
                 }
+                if(message->text == Messages::PLAYED_BETS)
+                {
+                    BetDTO dto(chatID);
+                    const std::string  playerPlayedBetsStr = dto.playerPlayedBets();
+                    bot.getApi().sendMessage(chatID, playerPlayedBetsStr == "" ? Messages::NO_BETS : playerPlayedBetsStr);
+                }
 
                 ReplyKeyboardMarkup::Ptr kb(new ReplyKeyboardMarkup);
-                KeyboardCreator::createOneColumnKeyboard({Messages::PLACE_BET, Messages::CURRENT_BETS, Messages::COINS}, kb);
+                KeyboardCreator::createOneColumnKeyboard({Messages::PLACE_BET, Messages::CURRENT_BETS,  Messages::PLAYED_BETS, Messages::COINS}, kb);
                 bot.getApi().sendMessage(chatID, Messages::CHOOSE_OPTION, 0, false, kb);
 
                 break;
@@ -258,7 +264,7 @@ int main(int argc, char *argv[])
                 }
                 it->reset();
                 ReplyKeyboardMarkup::Ptr kb(new ReplyKeyboardMarkup);
-                KeyboardCreator::createOneColumnKeyboard({Messages::PLACE_BET, Messages::CURRENT_BETS, Messages::COINS}, kb);
+                KeyboardCreator::createOneColumnKeyboard({Messages::PLACE_BET, Messages::CURRENT_BETS, Messages::PLAYED_BETS, Messages::COINS}, kb);
                 bot.getApi().sendMessage(chatID, Messages::CHOOSE_OPTION, 0, false, kb);
 
                 break;

@@ -57,7 +57,6 @@ bool AdminDTO::updateCoins(int matchID)
     selectBetsQuery.prepare(selectBetsCmd);
     selectBetsQuery.bindValue(":matchID", matchID);
     exec(selectBetsQuery);
-    qInfo() << selectBetsQuery.size();
 
     while(selectBetsQuery.next())
     {
@@ -65,7 +64,6 @@ bool AdminDTO::updateCoins(int matchID)
         int amount = record.value(0).toInt();      
         double koef = record.value(1).toDouble();
         int match_result_id_from_bets = record.value(2).toInt();
-        qInfo() << amount << match_result_id_from_bets;
         long player_id = record.value(3).toLongLong();
 
         QString selectIDcmd = "SELECT match_result_id FROM matches WHERE id = :matchID";
@@ -81,7 +79,6 @@ bool AdminDTO::updateCoins(int matchID)
 
             if(match_result_id_from_bets == match_result_id)
             {
-                qInfo() << "Updated";
                 PlayerDTO dto(player_id);
                 dto.updateCoins(dto.getCoins() + round(amount * koef));
             }

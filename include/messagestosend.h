@@ -15,6 +15,7 @@ namespace Messages {
 const std::string PLACE_BET = Emojis::ROCKET + " Place a bet";
 const std::string CURRENT_BETS = Emojis::FOLDED_HANDS + " My current bets";
 const std::string COINS = Emojis::MONEY + " My coins";
+const std::string PLAYED_BETS = Emojis::CHECK_MARK+ " Played bets";
 const std::string LOGIN = "You are not logged in, please, use /start command";
 const std::string LOADING = "Loading matches...";
 const std::string CHOOSE_OPTION = "Please, choose option";
@@ -23,7 +24,7 @@ const std::string NO_MATCHES = "No upcomming matches";
 const std::string LARGE_NUMBER = "Too large number";
 const std::string CHOOSE_WINNER = "Choose a winner";
 const std::string INPUT_AMOUNT = "Input bet amount";
-const std::string NO_BETS = "You don't have current bets";
+const std::string NO_BETS = "You don't have bets";
 const std::string NO_COINS = "You don't have that coins";
 const std::string CONFIRM_BET = "Confirm a bet";
 const std::string CHOOSE_NUMBER = "Please, choose a number from a given keyboard";
