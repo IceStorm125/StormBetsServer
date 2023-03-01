@@ -86,8 +86,8 @@ std::string BetDTO::playerPlayedBets()
         QString team1 = record.value(3).toString();
         QString team2 = record.value(4).toString();
         int matchResID = record.value(5).toInt();
-        QString choosedRes = record.value(6).toString();
-        QString matchRes = record.value(7).toString();
+        QString matchRes = record.value(6).toString();
+        QString choosedRes = record.value(7).toString();
 
         if(betResID == matchResID)
         {

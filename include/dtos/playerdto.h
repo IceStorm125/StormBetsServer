@@ -17,7 +17,7 @@ public:
 private:
     int chatID;
 
-    const int START_COINS = 10000;
+    const int START_COINS = 5000;
 };
 
 #endif // PLAYERDTO_H

@@ -43,7 +43,6 @@ int main(int argc, char *argv[])
 
     Bot bot(TOKEN);
 
-
     JsonDataExtractor extractor;
     std::vector<Processing> currentProceses;
 
@@ -239,7 +238,7 @@ int main(int argc, char *argv[])
                 bot.getApi().sendMessage(chatID, Messages::CONFIRM_BET);
                 ReplyKeyboardMarkup::Ptr kb(new ReplyKeyboardMarkup);
                 KeyboardCreator::createOneColumnKeyboard({Messages::CONFIRM, Messages::RESET}, kb);
-                bot.getApi().sendMessage(chatID, it->getPrintedBet(), 0, false, kb);
+                bot.getApi().sendMessage(chatID, it->toPrint(), 0, false, kb);
                 break;
             }
             case Processing::Status::ACCEPTING:{

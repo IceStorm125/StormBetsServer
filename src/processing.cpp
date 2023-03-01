@@ -69,7 +69,7 @@ void Processing::setMatch(const Match &value)
     match = value;
 }
 
-std::string Processing::getPrintedBet()
+std::string Processing::toPrint()
 {
     std::stringstream ss;
     ss << match.toPrint();

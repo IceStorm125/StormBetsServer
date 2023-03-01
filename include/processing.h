@@ -46,11 +46,13 @@ public:
     Match getMatch() const;
     void setMatch(const Match &value);
 
-    std::string getPrintedBet();
-    void reset();
-
     double getKoef() const;
     void setKoef(double value);
+
+    std::string toPrint();
+    void reset();
+
+
 
 private:
     int userID;
