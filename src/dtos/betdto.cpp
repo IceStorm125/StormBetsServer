@@ -75,6 +75,12 @@ std::string BetDTO::playerPlayedBets()
     exec(query);
 
     std::stringstream ss;
+    if(!query.size())
+    {
+        ss << "You don't have played bets";
+        return ss.str();
+    }
+
     ss << "Last played bets\n\n";
 
     while (query.next())
@@ -89,18 +95,17 @@ std::string BetDTO::playerPlayedBets()
         QString matchRes = record.value(6).toString();
         QString choosedRes = record.value(7).toString();
 
+        ss << team1.toStdString() << " vs " << team2.toStdString() << "(" << matchRes.toStdString() << ")" << "\n"
+           << "Bet: " << amount << " on " << choosedRes.toStdString() << "(" << koef << ")\n";
+
         if(betResID == matchResID)
         {
-            ss << team1.toStdString() << " vs " << team2.toStdString() << "(" << matchRes.toStdString() << ")" << "\n"
-               << "Bet: " << amount << " on " << choosedRes.toStdString() << "(" << koef << ")\n"
-               << "Result: " << Emojis::CHECK_MARK << "\n"
+            ss << "Result: " << Emojis::CHECK_MARK << "\n"
                << "Coins change: " << "+" << static_cast<int>(amount * koef) << "\n\n";
         }
         else
         {
-            ss << team1.toStdString() << " vs " << team2.toStdString() << "(" << matchRes.toStdString() << ")" << "\n"
-               << "Bet: " << amount << " on " << choosedRes.toStdString() << "(" << koef << ")\n"
-               << "Result: " << Emojis::CROSS_MARK << "\n"
+            ss << "Result: " << Emojis::CROSS_MARK << "\n"
                << "Coins change: " << "-" << amount << "\n\n";
         }
     }
