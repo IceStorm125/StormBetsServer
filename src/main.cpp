@@ -302,8 +302,12 @@ int main(int argc, char *argv[])
                     bdto.deleteBetByID(betIdToDelete);
 
                     PlayerDTO pdto(chatID);
-                    pdto.updateCoins(pdto.getCoins() + amount * 0.9);
-                    bot.getApi().sendMessage(chatID, "Bet deleted");
+                    int returnAmount = amount * 0.9;
+                    pdto.updateCoins(pdto.getCoins() + returnAmount);
+
+                    std::string returnAmountstr = std::to_string(returnAmount);
+                    returnAmountstr.erase (returnAmountstr.find_last_not_of('.') + 1, std::string::npos);
+                    bot.getApi().sendMessage(chatID, "Bet deleted. You got " + returnAmountstr + " coins back.");
                 }
                 else
                 {
