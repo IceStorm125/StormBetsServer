@@ -2,6 +2,7 @@
 #define PROCESSING_H
 
 #include <vector>
+#include <map>
 #include <string>
 #include "match.h"
 
@@ -18,7 +19,8 @@ public:
         CHOOSING_AMOUNT,
         ACCEPTING,
         CHECK_CURRENT_BETS,
-        CHECK_COINS
+        CHECK_COINS,
+        DELETTING_BET
     };
 
     enum Result
@@ -47,12 +49,18 @@ public:
     void setMatch(const Match &value);
 
     double getKoef() const;
-    void setKoef(double value);
+    void setKoef(double value); 
+
+    std::map<int, int> getMatchNumberToID() const;
+    void setMatchNumberToID(const std::map<int, int> &value);
 
     std::string toPrint();
     void reset();
 
 
+
+    int getMatchToDeleteNumber() const;
+    void setMatchToDeleteNumber(int value);
 
 private:
     int userID;
@@ -62,6 +70,9 @@ private:
     int result;
     double koef;
     int amount;
+    int matchToDeleteNumber;
+    std::map<int, int> matchNumberToID;
+
 };
 
 #endif // PROCESSING_H

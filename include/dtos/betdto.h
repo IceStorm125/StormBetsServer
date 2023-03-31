@@ -2,6 +2,8 @@
 #define BETDTO_H
 
 #include <string>
+#include <map>
+
 #include "dto.h"
 #include "processing.h"
 #include "match.h"
@@ -13,9 +15,12 @@ public:
 
 
     bool confirm(const Processing &bet);
+    bool deleteBetByID(int id);
+    int getBetAmountByID(int id);
 
     std::string playerCurrentBets();
-    std::string playerPlayedBets();
+    std::string playerCurrentBetsToDelete(std::map<int, int> &betNumberToID);
+    std::string playerPlayedBets(int limit);
 
 
 private:

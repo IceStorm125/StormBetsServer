@@ -30,13 +30,42 @@ bool BetDTO::confirm(const Processing &bet)
     return exec(query);
 }
 
+bool BetDTO::deleteBetByID(int id)
+{
+    QString cmd = "DELETE FROM bets WHERE id = :id;";
+    QSqlQuery query;
+    query.prepare(cmd);
+    query.bindValue(":id", id);
+    return exec(query);
+}
+
+int BetDTO::getBetAmountByID(int id)
+{
+    QString cmd = "SELECT amount FROM bets WHERE id = :id;";
+    QSqlQuery query;
+    query.prepare(cmd);
+    query.bindValue(":id", id);
+    exec(query);
+
+    if (query.next())
+    {
+        QSqlRecord record = query.record();
+        int amount = record.value(0).toInt();
+        return amount;
+    }
+    else
+    {
+        qInfo() << query.lastError().text();
+    }
+    return 0;
+}
+
 std::string BetDTO::playerCurrentBets()
 {
     QString cmd = "SELECT b.amount, b.koef, mr.name, m.team1, m.team2, m.time FROM bets b "
                   "JOIN (matches m, match_results mr) ON (m.id = b.match_id AND mr.id = b.match_result_id) "
                   "WHERE player_id = :chatID AND m.match_result_id IS NULL "
-                  "ORDER BY m.time DESC "
-                  "LIMIT 10;";
+                  "ORDER BY m.time DESC;";
     QSqlQuery query;
     query.prepare(cmd);
     query.bindValue(":chatID", chatID);
@@ -62,16 +91,54 @@ std::string BetDTO::playerCurrentBets()
     return ss.str();
 }
 
-std::string BetDTO::playerPlayedBets()
+std::string BetDTO::playerCurrentBetsToDelete(std::map<int, int> &betNumberToID)
+{
+    QString cmd = "SELECT b.amount, b.koef, mr.name, m.team1, m.team2, m.time, ROW_NUMBER() OVER( ORDER BY m.time DESC) AS 'rownumber', b.id FROM bets b "
+                  "JOIN (matches m, match_results mr) ON (m.id = b.match_id AND mr.id = b.match_result_id) "
+                  "WHERE player_id = :chatID AND m.match_result_id IS NULL "
+                  "ORDER BY m.time DESC;";
+
+    QSqlQuery query;
+    query.prepare(cmd);
+    query.bindValue(":chatID", chatID);
+    exec(query);
+
+    std::stringstream ss;
+    while (query.next())
+    {
+        QSqlRecord record = query.record();
+        int amount = record.value(0).toInt();
+        double koef = record.value(1).toDouble();
+        QString matchRes = record.value(2).toString();
+        QString team1 = record.value(3).toString();
+        QString team2 = record.value(4).toString();
+        QString time = record.value(5).toString();
+        int number = record.value(6).toInt();
+        int ID = record.value(7).toInt();
+
+
+        ss << number << ". " << team1.toStdString() << " vs " << team2.toStdString() << "\n"
+           << "Result: " << matchRes.toStdString() << "(" << koef << ")\n"
+           << "Bet: " << amount << " -> " << static_cast<int>(amount * koef) << "\n"
+           << "Time: " << time.toStdString() << "\n\n";
+
+        betNumberToID.insert({number, ID});
+    }
+
+    return ss.str();
+}
+
+std::string BetDTO::playerPlayedBets(int limit)
 {
     QString cmd = "SELECT b.amount, b.koef, b.match_result_id, m.team1, m.team2, m.match_result_id, mr.name, br.name FROM bets b "
                   "JOIN (matches m, match_results br, match_results mr) ON (m.id = b.match_id AND br.id = b.match_result_id AND mr.id = m.match_result_id) "
                   "WHERE player_id = :chatID AND m.match_result_id IS NOT NULL "
                   "ORDER BY m.time DESC "
-                  "LIMIT 10;";
+                  "LIMIT :limit;";
     QSqlQuery query;
     query.prepare(cmd);
     query.bindValue(":chatID", chatID);
+    query.bindValue(":limit", limit);
     exec(query);
 
     std::stringstream ss;

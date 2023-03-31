@@ -89,6 +89,26 @@ void Processing::reset()
     koef = 0;
 }
 
+int Processing::getMatchToDeleteNumber() const
+{
+    return matchToDeleteNumber;
+}
+
+void Processing::setMatchToDeleteNumber(int value)
+{
+    matchToDeleteNumber = value;
+}
+
+std::map<int, int> Processing::getMatchNumberToID() const
+{
+    return matchNumberToID;
+}
+
+void Processing::setMatchNumberToID(const std::map<int, int> &value)
+{
+    matchNumberToID = value;
+}
+
 double Processing::getKoef() const
 {
     return koef;

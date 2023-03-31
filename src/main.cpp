@@ -30,7 +30,7 @@ enum Tournaments
 {
     ENGLISH_LEAGUE = 3465,
     CHAMPIONS_LEAGUE = 3465,
-    LIMA_MAJOR = 7200
+    BLAST_SHOWDOWN = 5972
 };
 
 int main(int argc, char *argv[])
@@ -63,7 +63,7 @@ int main(int argc, char *argv[])
         const long chatID{message->chat->id};
 
         ReplyKeyboardMarkup::Ptr kb(new ReplyKeyboardMarkup);
-        KeyboardCreator::createOneColumnKeyboard({Messages::PLACE_BET, Messages::CURRENT_BETS, Messages::PLAYED_BETS, Messages::COINS}, kb);
+        KeyboardCreator::createOneColumnKeyboard({Messages::PLACE_BET, Messages::CURRENT_BETS, Messages::PLAYED_BETS, Messages::COINS, Messages::DELETE_BET}, kb);
         bot.getApi().sendMessage(chatID, Messages::CHOOSE_OPTION, 0, false, kb);
 
         if(auto it = std::remove_if(currentProceses.begin(), currentProceses.end(),[chatID](Processing &p){ return chatID == p.getUserID(); }); it != currentProceses.end())
@@ -111,7 +111,7 @@ int main(int argc, char *argv[])
                 {
                     it->setStatus(Processing::Status::CHOOSING_MATCH);
                     bot.getApi().sendMessage(chatID, Messages::LOADING, 0, false, ptrForRemoveKeyboard);
-                    std::vector<Match> matches = extractor.getUpcomingMatchesByTournamentID(Tournaments::LIMA_MAJOR);
+                    std::vector<Match> matches = extractor.getUpcomingMatchesByTournamentID(Tournaments::BLAST_SHOWDOWN);
                     if(matches.empty())
                     {
                         bot.getApi().sendMessage(chatID, Messages::NO_MATCHES, 0, false, ptrForRemoveKeyboard);
@@ -149,12 +149,35 @@ int main(int argc, char *argv[])
                 if(message->text == Messages::PLAYED_BETS)
                 {
                     BetDTO dto(chatID);
-                    const std::string  playerPlayedBetsStr = dto.playerPlayedBets();
+                    const std::string  playerPlayedBetsStr = dto.playerPlayedBets(10);
                     bot.getApi().sendMessage(chatID, playerPlayedBetsStr == "" ? Messages::NO_BETS : playerPlayedBetsStr);
+                }
+                if(message->text == Messages::DELETE_BET)
+                {
+                    BetDTO dto(chatID);
+                    bot.getApi().sendMessage(chatID, Messages::CHOOSE_BET_TO_DELETE, 0, false, ptrForRemoveKeyboard);
+                    std::map<int, int> betNumbersToID;
+
+                    std::string playerCurrentBetsStr = dto.playerCurrentBetsToDelete(betNumbersToID);
+                    it->setMatchNumberToID(betNumbersToID);
+
+
+                    std::vector<std::string> numbersToSend;
+                    numbersToSend.reserve(betNumbersToID.size());
+                    std::for_each(betNumbersToID.cbegin(), betNumbersToID.cend(), [&numbersToSend](auto const &m){
+                        numbersToSend.push_back(std::to_string(m.first));
+                    });
+
+                    it->setStatus(Processing::Status::DELETTING_BET);
+
+                    ReplyKeyboardMarkup::Ptr kb(new ReplyKeyboardMarkup);
+                    KeyboardCreator::createOneColumnKeyboard(numbersToSend, kb);
+                    bot.getApi().sendMessage(chatID, playerCurrentBetsStr, false, 0, kb);
+                    break;
                 }
 
                 ReplyKeyboardMarkup::Ptr kb(new ReplyKeyboardMarkup);
-                KeyboardCreator::createOneColumnKeyboard({Messages::PLACE_BET, Messages::CURRENT_BETS,  Messages::PLAYED_BETS, Messages::COINS}, kb);
+                KeyboardCreator::createOneColumnKeyboard({Messages::PLACE_BET, Messages::CURRENT_BETS,  Messages::PLAYED_BETS, Messages::COINS, Messages::DELETE_BET}, kb);
                 bot.getApi().sendMessage(chatID, Messages::CHOOSE_OPTION, 0, false, kb);
 
                 break;
@@ -263,11 +286,38 @@ int main(int argc, char *argv[])
                 }
                 it->reset();
                 ReplyKeyboardMarkup::Ptr kb(new ReplyKeyboardMarkup);
-                KeyboardCreator::createOneColumnKeyboard({Messages::PLACE_BET, Messages::CURRENT_BETS, Messages::PLAYED_BETS, Messages::COINS}, kb);
+                KeyboardCreator::createOneColumnKeyboard({Messages::PLACE_BET, Messages::CURRENT_BETS, Messages::PLAYED_BETS, Messages::COINS, Messages::DELETE_BET}, kb);
                 bot.getApi().sendMessage(chatID, Messages::CHOOSE_OPTION, 0, false, kb);
 
                 break;
+
             }
+            case Processing::Status::DELETTING_BET: {
+                if(it->getMatchNumberToID().contains(std::stoi(message->text)))
+                {
+                    BetDTO bdto(chatID);
+                    int betIdToDelete = it->getMatchNumberToID().at(std::stoi(message->text));
+                    int amount = bdto.getBetAmountByID(betIdToDelete);
+
+                    bdto.deleteBetByID(betIdToDelete);
+
+                    PlayerDTO pdto(chatID);
+                    pdto.updateCoins(pdto.getCoins() + amount * 0.9);
+                    bot.getApi().sendMessage(chatID, "Bet deleted");
+                }
+                else
+                {
+                    ReplyKeyboardMarkup::Ptr kb(new ReplyKeyboardMarkup);
+                    bot.getApi().sendMessage(chatID, "There is now bet with this number");
+                }
+
+                it->reset();
+                ReplyKeyboardMarkup::Ptr kb(new ReplyKeyboardMarkup);
+                KeyboardCreator::createOneColumnKeyboard({Messages::PLACE_BET, Messages::CURRENT_BETS, Messages::PLAYED_BETS, Messages::COINS, Messages::DELETE_BET}, kb);
+                bot.getApi().sendMessage(chatID, Messages::CHOOSE_OPTION, 0, false, kb);
+
+                break;
+                }
             }
         }
     });
