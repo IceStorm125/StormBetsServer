@@ -11,9 +11,11 @@
 #include <map>
 #include <algorithm>
 #include <iostream>
+#include <memory>
 #include <thread>
 
-#include "requester.h"
+#include "curlClient.h"
+#include "boostClient.h"
 
 JsonDataExtractor::JsonDataExtractor()
 {
@@ -27,10 +29,10 @@ std::vector<Match> JsonDataExtractor::getUpcomingMatchesByTournamentID(int ID)
 
     std::vector<Match> upcomingMatches;
 
-    Requester requester;
-    if(std::string matchesResponce; requester.getJsonDataFromURL(URL, matchesResponce) == 200)
+    std::unique_ptr<Client> client = std::make_unique<CURLClient>();
+    if(std::string responce; client->getJsonDataFromURL(URL, responce) == 200)
     {
-        QString qstrResponce = QString::fromUtf8(matchesResponce.c_str());
+        QString qstrResponce = QString::fromUtf8(responce.c_str());
         QJsonDocument jsonResponce = QJsonDocument::fromJson(qstrResponce.toUtf8());
         QJsonObject jsonObject = jsonResponce.object().value("data").toObject();
         QJsonArray jsonArrayMatches = jsonObject.value("matches").toArray();
@@ -74,10 +76,10 @@ std::optional<Match> JsonDataExtractor::getMatchByID(int ID)
     std::string URL{MATCH_URL};
     URL += std::to_string(ID);
 
-    Requester requester;
-    if(std::string matchResponce; requester.getJsonDataFromURL(URL, matchResponce) == 200)
+    std::unique_ptr<Client> client = std::make_unique<CURLClient>();
+    if(std::string responce; client->getJsonDataFromURL(URL, responce) == 200)
     {
-        QString qstrResponce = QString::fromUtf8(matchResponce.c_str());
+        QString qstrResponce = QString::fromUtf8(responce.c_str());
         QJsonDocument jsonResponce = QJsonDocument::fromJson(qstrResponce.toUtf8());
         QJsonObject jsonObject = jsonResponce.object().value("data").toObject();
         QJsonArray jsonArrayMarkets = jsonObject.value("markets").toArray();

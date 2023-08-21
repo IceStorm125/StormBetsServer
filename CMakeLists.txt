@@ -6,8 +6,8 @@ set(CMAKE_INCLUDE_CURRENT_DIR ON)
 
 set(CMAKE_AUTOUIC ON)
 set(CMAKE_AUTOMOC ON)
-set(CMAKE_AUTORCC ON)
 
+set(CMAKE_BUILD_TYPE "Release")
 set(CMAKE_CXX_STANDARD 20)
 set(CMAKE_CXX_STANDARD_REQUIRED ON)
 
@@ -22,13 +22,14 @@ find_package(Qt5Sql)
 
 add_subdirectory(tgbot-cpp)
 
+
 include_directories(
     include
     include/*
     )
 
 set(include_files
-    include/requester.h
+    include/client.h
     include/match.h
     include/jsondataextractor.h
     include/keyboardcreator.h
@@ -42,11 +43,12 @@ set(include_files
     include/dtos/betdto.h
     include/dtos/admindto.h
     include/dbconnection.h
+    include/curlClient.h
+    include/boostClient.h
    )
 
 set(source_files
     src/main.cpp
-    src/requester.cpp
     src/match.cpp
     src/jsondataextractor.cpp
     src/keyboardcreator.cpp
@@ -57,6 +59,8 @@ set(source_files
     src/dtos/betdto.cpp
     src/dtos/admindto.cpp
     src/dbconnection.cpp
+    src/curlClient.cpp
+    src/boostClient.cpp
 )
 
 set(tests
@@ -67,7 +71,7 @@ add_executable(StormBetsServer
     ${source_files}
     ${include_files}
     ${tests}
-    )
+)
 
 target_link_libraries(StormBetsServer
     Qt5::Core
@@ -78,5 +82,5 @@ target_link_libraries(StormBetsServer
     ${OPENSSL_LIBRARIES}
     ${Boost_LIBRARIES}
     ${CURL_LIBRARIES}
-    )
+)
 

@@ -83,20 +83,11 @@ void Processing::reset()
 {
     status = Processing::Status::START;
     userMatches.clear();
+    matchNumberToID.clear();
     match = Match();
     result = -1;
     amount = 0;
     koef = 0;
-}
-
-int Processing::getMatchToDeleteNumber() const
-{
-    return matchToDeleteNumber;
-}
-
-void Processing::setMatchToDeleteNumber(int value)
-{
-    matchToDeleteNumber = value;
 }
 
 std::map<int, int> Processing::getMatchNumberToID() const

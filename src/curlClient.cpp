@@ -1,8 +1,16 @@
-#include "requester.h"
-#include <iostream>
+#include "curlClient.h"
+
 #include <memory>
 
-#include <QDebug>
+CURLClient::CURLClient()
+{
+
+}
+
+CURLClient::~CURLClient()
+{
+
+}
 
 namespace
 {
@@ -18,13 +26,7 @@ std::size_t callback(
 }
 }
 
-
-Requester::Requester()
-{
-
-}
-
-int Requester::getJsonDataFromURL(const std::string &URL, std::string &outResponce)
+int CURLClient::getJsonDataFromURL(const std::string &URL, std::string &outResponce)
 {
     curl = curl_easy_init();
 
@@ -47,6 +49,5 @@ int Requester::getJsonDataFromURL(const std::string &URL, std::string &outRespon
 
     return responceCode;
 }
-
 
 

@@ -57,11 +57,6 @@ public:
     std::string toPrint();
     void reset();
 
-
-
-    int getMatchToDeleteNumber() const;
-    void setMatchToDeleteNumber(int value);
-
 private:
     int userID;
     int status;
@@ -70,7 +65,6 @@ private:
     int result;
     double koef;
     int amount;
-    int matchToDeleteNumber;
     std::map<int, int> matchNumberToID;
 
 };

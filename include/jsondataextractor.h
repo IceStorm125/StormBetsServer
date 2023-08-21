@@ -3,10 +3,12 @@
 
 #include <vector>
 #include <optional>
+#include <memory>
 
 #include <QJsonArray>
 
 #include "match.h"
+
 class JsonDataExtractor
 {
 public:
@@ -15,11 +17,11 @@ public:
     std::vector<Match> getUpcomingMatchesByTournamentID(int ID);
     std::optional<Match> getMatchByID(int ID);
 
-
 private:
     void addMatchToVectorOfMatches(std::vector<Match> &matches, QJsonValue match);
 
 private:
+
     const std::string TOURNAMENTS_URL{"https://api.rivalry.com/api/v1/tournaments/"};
     const std::string MATCH_URL{"https://api.rivalry.com/api/v1/matches/"};
 
