@@ -1,4 +1,4 @@
-cmake_minimum_required(VERSION 3.5)
+cmake_minimum_required(VERSION 3.28)
 
 project(StormBetsServer LANGUAGES CXX)
 
@@ -11,16 +11,20 @@ set(CMAKE_BUILD_TYPE "Release")
 set(CMAKE_CXX_STANDARD 20)
 set(CMAKE_CXX_STANDARD_REQUIRED ON)
 
-find_package(Threads REQUIRED)
-find_package(OpenSSL REQUIRED)
-find_package(Boost COMPONENTS system REQUIRED)
-find_package(CURL REQUIRED)
-
 find_package(Qt5Core)
 find_package(Qt5Test)
 find_package(Qt5Sql)
 
 add_subdirectory(tgbot-cpp)
+
+include("${CMAKE_CURRENT_BINARY_DIR}/Release/generators/conan_toolchain.cmake")
+find_package(spdlog REQUIRED)
+find_package(fmt REQUIRED)
+find_package(OpenSSL REQUIRED)
+find_package(CURL REQUIRED)
+find_package(Boost COMPONENTS system REQUIRED)
+find_package(GTest REQUIRED)
+# find_package(tgbot REQUIRED)
 
 
 include_directories(
@@ -78,9 +82,11 @@ target_link_libraries(StormBetsServer
     Qt5::Test
     Qt5::Sql
     TgBot
-    ${CMAKE_THREAD_LIBS_INIT}
-    ${OPENSSL_LIBRARIES}
-    ${Boost_LIBRARIES}
-    ${CURL_LIBRARIES}
+    Boost::system
+    spdlog::spdlog 
+    fmt::fmt
+    CURL::libcurl 
+    openssl::openssl
+    gtest::gtest
 )
 
