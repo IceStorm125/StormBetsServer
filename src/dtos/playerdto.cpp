@@ -13,7 +13,7 @@ PlayerDTO::PlayerDTO(int chatID_)
 
 int PlayerDTO::getCoins()
 {
-    QString cmd("SELECT players.coins FROM my_schema.players WHERE players.id=:id");
+    QString cmd("SELECT players.coins FROM players WHERE players.id=:id");
     QSqlQuery query;
     query.prepare(cmd);
     query.bindValue(":id", chatID);

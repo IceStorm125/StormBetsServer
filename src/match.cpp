@@ -2,6 +2,8 @@
 
 #include <sstream>
 
+#include <fmt/core.h>
+
 Match::Match()
 {
 
@@ -18,14 +20,11 @@ Match::Match(int ID_, const QString &teamName1, const QString &teamName2, double
 
 std::string Match::toPrint()
 {
-    std::stringstream ss;
-    ss << team1.first.toStdString() << " (" << team1.second << ")";
-    ss << " vs ";
-    ss << team2.first.toStdString() << " (" << team2.second << ")\n";
-    if(koefDraw != 0) ss << "Draw: " << koefDraw << "\n";
-    ss << time.toString("dd.MM.yyyy hh:mm").toStdString();
-    ss << "\n\n";
-    return ss.str();
+    std::string out = fmt::format("{} ({}) vs {} ({})\n", team1.first.toStdString(), team1.second, team2.first.toStdString(), team2.second);
+    if(koefDraw != 0) out+= fmt::format("Draw: {}\n", koefDraw);
+    out += fmt::format("{}\n\n", time.toString("dd.MM.yyyy hh:mm").toStdString());
+
+    return out;
 }
 
 int Match::getID() const

@@ -2,6 +2,10 @@
 
 #include <sstream>
 
+#include <fmt/core.h>
+
+
+
 Processing::Processing(long userID_)
 {
     userID = userID_;
@@ -71,12 +75,13 @@ void Processing::setMatch(const Match &value)
 
 std::string Processing::toPrint()
 {
-    std::stringstream ss;
-    ss << match.toPrint();
-    ss << "Winner: " << (result == Processing::Result::W1 ? match.getTeam1().first.toStdString() : (result == Processing::Result::W2 ? match.getTeam2().first.toStdString() : "Draw")) << "\n";
-    ss << "Amount: " << amount;
+    std::string out = fmt::format(
+        "{}"
+        "Winner: {}\n"
+        "Amount: {}", 
+        match.toPrint(), (result == Processing::Result::W1 ? match.getTeam1().first.toStdString() : (result == Processing::Result::W2 ? match.getTeam2().first.toStdString() : "Draw")), amount);
 
-    return ss.str();
+    return out;
 }
 
 void Processing::reset()

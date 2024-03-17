@@ -3,6 +3,8 @@
 #include <QDebug>
 #include <QSqlDatabase>
 
+#include "spdlog/spdlog.h"
+
 DBconnection::DBconnection()
 {   
 
@@ -17,23 +19,23 @@ QSqlDatabase DBconnection::getDB()
 {
     if(db.isOpen())
     {
-        qInfo() << "DB already open";
+        spdlog::info("DB already open");
         return db;
     }
 
     db = QSqlDatabase::addDatabase("QMYSQL");
     db.setHostName("localhost");
-    db.setDatabaseName("my_schema");
+    db.setDatabaseName("stormbets");
     db.setUserName("root");
     db.setPassword("root");
 
     if(!db.open())
     {
-        qInfo() << "DB is not open";
+        spdlog::critical("DB is not open");
     }
     else
     {
-        qInfo() << "DB is open";
+        spdlog::info("DB is open");
     }
     return db;
 }

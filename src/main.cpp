@@ -28,9 +28,8 @@
 
 enum Tournaments
 {
-    ENGLISH_LEAGUE = 3465,
     CHAMPIONS_LEAGUE = 3465,
-    DreamLeague = 7299
+    BBdacha = 7573
 };
 
 int main(int argc, char *argv[])
@@ -105,14 +104,13 @@ int main(int argc, char *argv[])
         }
         else
         {
-            std::cout << "Status " << it->getStatus() << std::endl;
             switch (it->getStatus())
             {
             case Processing::Status::START:{
                 if(message->text == Messages::PLACE_BET)
                 {
                     bot.getApi().sendMessage(chatID, Messages::LOADING, 0, false, ptrForRemoveKeyboard);
-                    std::vector<Match> matches = extractor.getUpcomingMatchesByTournamentID(Tournaments::ENGLISH_LEAGUE);
+                    std::vector<Match> matches = extractor.getUpcomingMatchesByTournamentID(Tournaments::CHAMPIONS_LEAGUE);
                     if(matches.empty())
                     {
                         bot.getApi().sendMessage(chatID, Messages::NO_MATCHES, 0, false, menuKeyboard);
@@ -303,7 +301,7 @@ int main(int argc, char *argv[])
                     break;
                 }
 
-                if(!it->getMatchNumberToID().contains(std::stoi(message->text)))
+                if(it->getMatchNumberToID().find(std::stoi(message->text)) == it->getMatchNumberToID().cend())
                 {
                     ReplyKeyboardMarkup::Ptr kb(new ReplyKeyboardMarkup);
                     bot.getApi().sendMessage(chatID, "There is no bet with this number");
