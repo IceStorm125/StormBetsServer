@@ -2,6 +2,8 @@
 #include <QDebug>
 #include <QSqlError>
 
+#include "spdlog/spdlog.h"
+
 DTO::DTO()
 {
     db = DBconnection::getInstance().getDB();
@@ -37,7 +39,7 @@ bool DTO::exec(QSqlQuery &query)
     begin();
     if(!query.exec())
     {
-        qInfo() << "Fail: " << query.lastError().text();
+        spdlog::warn(query.lastError().text().toStdString());
         rollBack();
         return false;
     }

@@ -9,6 +9,10 @@
 
 #include <sstream>
 
+#include "spdlog/spdlog.h"
+#include <fmt/core.h>
+
+
 BetDTO::BetDTO(int chatID_)
 {
     chatID = chatID_;
@@ -55,7 +59,8 @@ int BetDTO::getBetAmountByID(int id)
     }
     else
     {
-        qInfo() << query.lastError().text();
+        spdlog::warn(query.lastError().text().toStdString());
+
     }
     return 0;
 }
@@ -71,7 +76,7 @@ std::string BetDTO::playerCurrentBets()
     query.bindValue(":chatID", chatID);
     exec(query);
 
-    std::stringstream ss;
+    std::string out{""};
     while (query.next())
     {
         QSqlRecord record = query.record();
@@ -82,13 +87,14 @@ std::string BetDTO::playerCurrentBets()
         QString team2 = record.value(4).toString();
         QString time = record.value(5).toString();
 
-        ss << team1.toStdString() << " vs " << team2.toStdString() << "\n"
-           << "Result: " << matchRes.toStdString() << "(" << koef << ")\n"
-           << "Bet: " << amount << " -> " << static_cast<int>(amount * koef) << "\n"
-           << "Time: " << time.toStdString() << "\n\n";
+        out += fmt::format("{} vs {}\n"
+                          "Result: {}({})\n"
+                          "Bet: {} -> {}\n"
+                          "Time: {}\n\n",
+                          team1.toStdString(), team2.toStdString(), matchRes.toStdString(), koef, amount, static_cast<int>(amount * koef), time.toStdString());
     }
 
-    return ss.str();
+    return out;
 }
 
 std::string BetDTO::playerCurrentBetsToDelete(std::map<int, int> &betNumberToID)
@@ -103,7 +109,8 @@ std::string BetDTO::playerCurrentBetsToDelete(std::map<int, int> &betNumberToID)
     query.bindValue(":chatID", chatID);
     exec(query);
 
-    std::stringstream ss;
+        std::string out{""};
+
     while (query.next())
     {
         QSqlRecord record = query.record();
@@ -116,16 +123,16 @@ std::string BetDTO::playerCurrentBetsToDelete(std::map<int, int> &betNumberToID)
         int number = record.value(6).toInt();
         int ID = record.value(7).toInt();
 
-
-        ss << number << ". " << team1.toStdString() << " vs " << team2.toStdString() << "\n"
-           << "Result: " << matchRes.toStdString() << "(" << koef << ")\n"
-           << "Bet: " << amount << " -> " << static_cast<int>(amount * koef) << "\n"
-           << "Time: " << time.toStdString() << "\n\n";
+        out += fmt::format("{}. {} vs {}\n"
+                          "Result: {}({})\n"
+                          "Bet: {} -> {}\n"
+                          "Time: {}\n\n",
+                          number, team1.toStdString(), team2.toStdString(), matchRes.toStdString(), koef, amount, static_cast<int>(amount * koef), time.toStdString());
 
         betNumberToID.insert({number, ID});
     }
 
-    return ss.str();
+    return out;
 }
 
 std::string BetDTO::playerPlayedBets(int limit)
@@ -141,14 +148,14 @@ std::string BetDTO::playerPlayedBets(int limit)
     query.bindValue(":limit", limit);
     exec(query);
 
-    std::stringstream ss;
+    
     if(!query.size())
     {
-        ss << "You don't have played bets";
-        return ss.str();
+        return "You don't have played bets";
     }
 
-    ss << "Last played bets\n\n";
+    std::string out {""};
+    out += fmt::format("Last played bets\n\n");
 
     while (query.next())
     {
@@ -162,22 +169,25 @@ std::string BetDTO::playerPlayedBets(int limit)
         QString matchRes = record.value(6).toString();
         QString choosedRes = record.value(7).toString();
 
-        ss << team1.toStdString() << " vs " << team2.toStdString() << "(" << matchRes.toStdString() << ")" << "\n"
-           << "Bet: " << amount << " on " << choosedRes.toStdString() << "(" << koef << ")\n";
+        out += fmt::format("{} vs {}({})\n"
+                           "Bet: {} on {}({})\n",
+                           team1.toStdString(), team2.toStdString(), matchRes.toStdString(), amount, choosedRes.toStdString(), koef);
 
         if(betResID == matchResID)
         {
-            ss << "Result: " << Emojis::CHECK_MARK << "\n"
-               << "Coins change: " << "+" << static_cast<int>(amount * koef) << "\n\n";
+            out += fmt::format("Result: {}\n"
+                               "Coins change: +{}\n\n",
+                               Emojis::CHECK_MARK, static_cast<int>(amount * koef));
         }
         else
         {
-            ss << "Result: " << Emojis::CROSS_MARK << "\n"
-               << "Coins change: " << "-" << amount << "\n\n";
+            out += fmt::format("Result: {}\n"
+                               "Coins change: -{}\n\n",
+                               Emojis::CROSS_MARK, amount);
         }
     }
 
-    return ss.str();
+    return out;
 }
 
 int BetDTO::getMatchResultID(const Processing &bet)
@@ -196,7 +206,8 @@ int BetDTO::getMatchResultID(const Processing &bet)
     }
     else
     {
-        qInfo() << query.lastError().text();
+        spdlog::warn(query.lastError().text().toStdString());
+
     }
     return 0;
 }
@@ -217,7 +228,8 @@ int BetDTO::getMatchID(const Processing &bet)
     }
     else
     {
-        qInfo() << query.lastError().text();
+        spdlog::warn(query.lastError().text().toStdString());
+
     }
     return 0;
 }

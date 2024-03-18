@@ -13,6 +13,8 @@
 #include <boost/algorithm/string.hpp>
 
 #include "tgbot/tgbot.h"
+#include "spdlog/spdlog.h"
+
 
 #include "processing.h"
 #include "jsondataextractor.h"
@@ -24,7 +26,7 @@
 #include "dtos/playerdto.h"
 #include "dtos/betdto.h"
 #include "dtos/admindto.h"
-#include "tests/test_regexmatcher.h"
+
 
 enum Tournaments
 {
@@ -110,7 +112,7 @@ int main(int argc, char *argv[])
                 if(message->text == Messages::PLACE_BET)
                 {
                     bot.getApi().sendMessage(chatID, Messages::LOADING, 0, false, ptrForRemoveKeyboard);
-                    std::vector<Match> matches = extractor.getUpcomingMatchesByTournamentID(Tournaments::CHAMPIONS_LEAGUE);
+                    std::vector<Match> matches = extractor.getUpcomingMatchesByTournamentID(8131);
                     if(matches.empty())
                     {
                         bot.getApi().sendMessage(chatID, Messages::NO_MATCHES, 0, false, menuKeyboard);
@@ -387,12 +389,12 @@ int main(int argc, char *argv[])
 
         while (true)
         {
-            qInfo() << "Long poll started";
+            // qInfo() << "Long poll started";
             longPoll.start();
         }
     } catch (std::exception& e)
     {
-        qInfo() << "error: " << e.what();
+        spdlog::error(e.what());
     }
 
     return 0;

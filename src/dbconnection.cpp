@@ -19,7 +19,7 @@ QSqlDatabase DBconnection::getDB()
 {
     if(db.isOpen())
     {
-        spdlog::info("DB already open");
+        // spdlog::info("DB already open");
         return db;
     }
 
@@ -29,14 +29,8 @@ QSqlDatabase DBconnection::getDB()
     db.setUserName("root");
     db.setPassword("root");
 
-    if(!db.open())
-    {
-        spdlog::critical("DB is not open");
-    }
-    else
-    {
-        spdlog::info("DB is open");
-    }
+    db.open() ? spdlog::info("DB is open") : spdlog::critical("DB is not open");
+
     return db;
 }
 
