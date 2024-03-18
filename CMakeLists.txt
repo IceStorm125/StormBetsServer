@@ -1,19 +1,15 @@
-cmake_minimum_required(VERSION 3.28)
+cmake_minimum_required(VERSION 3.22)
 
 project(StormBetsServer LANGUAGES CXX)
 
 set(CMAKE_INCLUDE_CURRENT_DIR ON)
-
-set(CMAKE_AUTOUIC ON)
-set(CMAKE_AUTOMOC ON)
-
 set(CMAKE_BUILD_TYPE "Release")
 set(CMAKE_CXX_STANDARD 20)
 set(CMAKE_CXX_STANDARD_REQUIRED ON)
 
-find_package(Qt5Core)
-find_package(Qt5Test)
-find_package(Qt5Sql)
+find_package(Qt5Core REQUIRED)
+find_package(Qt5Test REQUIRED)
+find_package(Qt5Sql REQUIRED)
 
 add_subdirectory(tgbot-cpp)
 
@@ -24,7 +20,6 @@ find_package(OpenSSL REQUIRED)
 find_package(CURL REQUIRED)
 find_package(Boost COMPONENTS system REQUIRED)
 find_package(GTest REQUIRED)
-# find_package(tgbot REQUIRED)
 
 
 include_directories(
@@ -52,7 +47,6 @@ set(include_files
    )
 
 set(source_files
-    src/main.cpp
     src/match.cpp
     src/jsondataextractor.cpp
     src/keyboardcreator.cpp
@@ -67,17 +61,37 @@ set(source_files
     src/boostClient.cpp
 )
 
-set(tests
-    tests/test_regexmatcher.h tests/test_regexmatcher.cpp
+set(tests_sources
+    tests/main_test.cpp
 )
 
 add_executable(StormBetsServer
+    src/main.cpp
     ${source_files}
     ${include_files}
-    ${tests}
 )
 
 target_link_libraries(StormBetsServer
+    Qt5::Core
+    Qt5::Test
+    Qt5::Sql
+    TgBot
+    Boost::system
+    spdlog::spdlog 
+    fmt::fmt
+    CURL::libcurl 
+    openssl::openssl
+)
+
+add_executable(tests
+    ${tests_sources}
+    ${source_files}
+    ${include_files}
+)
+
+add_test(tests tests)
+
+target_link_libraries(tests
     Qt5::Core
     Qt5::Test
     Qt5::Sql
