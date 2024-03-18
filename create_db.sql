@@ -1,5 +1,6 @@
+CREATE DATABASE IF NOT EXISTS stormbets;
 
-CREATE TABLE `stormbets`.`players` (
+CREATE TABLE IF NOT EXISTS `stormbets`.`players` (
   `id` INT NOT NULL,
   `coins` INT NOT NULL,
   `first_name` VARCHAR(45) NOT NULL,
@@ -7,8 +8,7 @@ CREATE TABLE `stormbets`.`players` (
   PRIMARY KEY (`id`),
   UNIQUE INDEX `id_UNIQUE` (`id` ASC) VISIBLE);
     
-  
-  CREATE TABLE `stormbets`.`match_results` (
+CREATE TABLE IF NOT EXISTS `stormbets`.`match_results` (
   `id` INT NOT NULL AUTO_INCREMENT,
   `name` VARCHAR(20) NOT NULL,
   PRIMARY KEY (`id`),
@@ -19,8 +19,7 @@ insert into stormbets.match_results(name) values("W1");
 insert into stormbets.match_results(name) values("W2");
 insert into stormbets.match_results(name) values("X");
 
-
-CREATE TABLE `stormbets`.`matches` (
+CREATE TABLE IF NOT EXISTS `stormbets`.`matches` (
   `id` INT NOT NULL AUTO_INCREMENT,
   `team1` VARCHAR(45) NOT NULL,
   `team2` VARCHAR(45) NOT NULL,
@@ -37,7 +36,7 @@ CREATE TABLE `stormbets`.`matches` (
     ON DELETE CASCADE
     ON UPDATE CASCADE);
     
-    CREATE TABLE `stormbets`.`bets` (
+CREATE TABLE IF NOT EXISTS `stormbets`.`bets` (
   `id` INT NOT NULL AUTO_INCREMENT,
   `amount` INT NOT NULL,
   `koef` DOUBLE NOT NULL,
