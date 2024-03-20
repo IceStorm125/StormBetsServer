@@ -15,8 +15,8 @@ add_subdirectory(tgbot-cpp)
 
 include("${CMAKE_CURRENT_BINARY_DIR}/Release/generators/conan_toolchain.cmake")
 find_package(spdlog REQUIRED)
+find_package(nlohmann_json REQUIRED)
 find_package(fmt REQUIRED)
-find_package(OpenSSL REQUIRED)
 find_package(CURL REQUIRED)
 find_package(Boost COMPONENTS system REQUIRED)
 find_package(GTest REQUIRED)
@@ -63,6 +63,7 @@ set(source_files
 
 set(tests_sources
     tests/main_test.cpp
+    tests/regex_test.hpp
 )
 
 add_executable(StormBetsServer
@@ -80,7 +81,7 @@ target_link_libraries(StormBetsServer
     spdlog::spdlog 
     fmt::fmt
     CURL::libcurl 
-    openssl::openssl
+    nlohmann_json::nlohmann_json
 )
 
 add_executable(tests
@@ -100,7 +101,7 @@ target_link_libraries(tests
     spdlog::spdlog 
     fmt::fmt
     CURL::libcurl 
-    openssl::openssl
+    nlohmann_json::nlohmann_json
     gtest::gtest
 )
 
