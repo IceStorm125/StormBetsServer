@@ -1,4 +1,5 @@
-
+#include "dtos/playerdto.h"
+#include "dtos/admindto.h"
 
 #include <QDebug>
 #include <QtSql>
@@ -6,10 +7,8 @@
 #include <QSqlDriver>
 #include <QSqlQuery>
 
-#include <sstream>
+#include <fmt/core.h>
 
-#include "dtos/playerdto.h"
-#include "dtos/admindto.h"
 
 AdminDTO::AdminDTO()
 {
@@ -23,7 +22,7 @@ std::string AdminDTO::getAllMatchesWithoutResult()
     query.prepare(cmd);
     exec(query);
 
-    std::stringstream ss;
+    std::string out{""};
     while (query.next())
     {
         QSqlRecord record = query.record();
@@ -32,10 +31,10 @@ std::string AdminDTO::getAllMatchesWithoutResult()
         QString team2 = record.value(2).toString();
         QString time = record.value(3).toString();
 
-        ss << id <<"| "<< team1.toStdString() << " vs " << team2.toStdString() << " | " << time.toStdString() << "\n";
+        out += fmt::format("{} | {} vs {} | {}\n", id, team1.toStdString(), team2.toStdString(), time.toStdString());  
     }
 
-    return ss.str();
+    return out;
 }
 
 bool AdminDTO::updateResult(int matchID, const std::string &result)
