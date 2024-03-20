@@ -5,9 +5,12 @@
 #include <optional>
 #include <memory>
 
-#include <QJsonArray>
-
 #include "match.h"
+
+#include <nlohmann/json.hpp>
+
+using json = nlohmann::json;
+
 
 class JsonDataExtractor
 {
@@ -18,7 +21,7 @@ public:
     std::optional<Match> getMatchByID(int ID);
 
 private:
-    void addMatchToVectorOfMatches(std::vector<Match> &matches, QJsonValue match);
+    void addMatchToVectorOfMatches(std::vector<Match> &matches, const json &match);
 
 private:
 
