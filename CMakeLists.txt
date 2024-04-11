@@ -7,13 +7,34 @@ set(CMAKE_BUILD_TYPE "Release")
 set(CMAKE_CXX_STANDARD 20)
 set(CMAKE_CXX_STANDARD_REQUIRED ON)
 
-find_package(Qt5Core REQUIRED)
-find_package(Qt5Test REQUIRED)
-find_package(Qt5Sql REQUIRED)
-
 add_subdirectory(tgbot-cpp)
 
+execute_process(
+    COMMAND apt install -y qtcreator qtbase5-dev qt5-qmake clang mysql-server libqt5sql5-mysql 
+    RESULT_VARIABLE QT_INSTALL_RESULT
+)
+
+# Check if the command was successful
+if(CONAN_RESULT)
+    message(FATAL_ERROR "Failed to run QT_INSTALL_COMMAND install command")
+endif()
+
+find_package(Qt5Core REQUIRED)
+find_package(Qt5Sql REQUIRED)
+
+execute_process(
+    COMMAND conan profile detect --force
+    COMMAND conan install ../conanfile.txt --build=missing
+    RESULT_VARIABLE CONAN_RESULT
+)
+
+# Check if the command was successful
+if(CONAN_RESULT)
+    message(FATAL_ERROR "Failed to run conan install command")
+endif()
+
 include("${CMAKE_CURRENT_BINARY_DIR}/Release/generators/conan_toolchain.cmake")
+
 find_package(spdlog REQUIRED)
 find_package(nlohmann_json REQUIRED)
 find_package(fmt REQUIRED)
@@ -74,7 +95,6 @@ add_executable(StormBetsServer
 
 target_link_libraries(StormBetsServer
     Qt5::Core
-    Qt5::Test
     Qt5::Sql
     TgBot
     Boost::system
@@ -94,7 +114,6 @@ add_test(tests tests)
 
 target_link_libraries(tests
     Qt5::Core
-    Qt5::Test
     Qt5::Sql
     TgBot
     Boost::system
