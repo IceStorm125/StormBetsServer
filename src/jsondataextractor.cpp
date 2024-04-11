@@ -34,13 +34,10 @@ std::vector<Match> JsonDataExtractor::getUpcomingMatchesByTournamentID(int ID)
 
         for(const json &match : jsonArrayMatches)
         {
-            threads.push_back(std::thread(&JsonDataExtractor::addMatchToVectorOfMatches, this, std::ref(upcomingMatches), match));
+            threads.push_back(std::thread(&JsonDataExtractor::addMatchToVectorOfMatches, this, std::ref(upcomingMatches), std::ref(match)));
         }
 
-        for(auto &thread: threads)
-        {
-            thread.join();
-        }
+        std::for_each(threads.begin(),threads.end(), std::mem_fn(&std::thread::join));
     }
     std::sort(upcomingMatches.begin(), upcomingMatches.end(),[](const Match &m1, const Match &m2){
         return m1.getTime() <= m2.getTime();

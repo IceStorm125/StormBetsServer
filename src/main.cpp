@@ -1,6 +1,5 @@
 #include <QCoreApplication>
 #include <QDebug>
-#include <QTest>
 #include <QtSql>
 #include <QSqlDatabase>
 #include <QSqlDriver>
