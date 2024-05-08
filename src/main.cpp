@@ -49,7 +49,7 @@ int main(int argc, char *argv[])
     ReplyKeyboardRemove::Ptr ptrForRemoveKeyboard(new ReplyKeyboardRemove);
 
     ReplyKeyboardMarkup::Ptr menuKeyboard(new ReplyKeyboardMarkup);
-    KeyboardCreator::createOneColumnKeyboard({Messages::PLACE_BET, Messages::CURRENT_BETS,  Messages::PLAYED_BETS, Messages::COINS, Messages::DELETE_BET}, menuKeyboard);
+    KeyboardCreator::createKeyboard({Messages::PLACE_BET, Messages::CURRENT_BETS,  Messages::PLAYED_BETS, Messages::COINS, Messages::DELETE_BET, Messages::STATS}, menuKeyboard, 2);
 
     std::vector<BotCommand::Ptr> commands;
     BotCommand::Ptr cmdArray1(new BotCommand);
@@ -111,7 +111,7 @@ int main(int argc, char *argv[])
                 if(message->text == Messages::PLACE_BET)
                 {
                     bot.getApi().sendMessage(chatID, Messages::LOADING, 0, false, ptrForRemoveKeyboard);
-                    std::vector<Match> matches = extractor.getUpcomingMatchesByTournamentID(8131);
+                    std::vector<Match> matches = extractor.getUpcomingMatchesByTournamentID(Tournaments::CHAMPIONS_LEAGUE);
                     if(matches.empty())
                     {
                         bot.getApi().sendMessage(chatID, Messages::NO_MATCHES, 0, false, menuKeyboard);
@@ -182,6 +182,13 @@ int main(int argc, char *argv[])
                         break;
                     }
                 }
+                if(message->text == Messages::STATS)
+                {
+                    PlayerDTO dto(chatID);
+                    std::string statsStr = dto.getStats();
+                    bot.getApi().sendMessage(chatID, statsStr, 0, false, menuKeyboard);
+                    break;
+                }
 
                 bot.getApi().sendMessage(chatID, Messages::CHOOSE_OPTION, 0, false, menuKeyboard);
 
@@ -251,12 +258,12 @@ int main(int argc, char *argv[])
                 }
 
                 PlayerDTO dto(chatID);
-                int coins = dto.getCoins();
-                int amount = std::stoi(message->text);
+                const int coins = dto.getCoins();
+                const int amount = std::stoi(message->text);
 
                 if(coins < amount)
                 {
-                    bot.getApi().sendMessage(chatID, Messages::NO_COINS);
+                    bot.getApi().sendMessage(chatID, "You have only " + std::to_string(coins) + Emojis::MONEY, 0, false, ptrForRemoveKeyboard);
                     break;
                 }
 
@@ -276,7 +283,7 @@ int main(int argc, char *argv[])
                     if(dto.confirm(*it))
                     {
                         PlayerDTO pdto(chatID);
-                        int coins = pdto.getCoins();
+                        const int coins = pdto.getCoins();
                         pdto.updateCoins(coins - it->getAmount());
                         bot.getApi().sendMessage(chatID, Messages::CONFIRMED, 0, false, ptrForRemoveKeyboard);
                     }
@@ -310,14 +317,14 @@ int main(int argc, char *argv[])
                 }
 
                 BetDTO bdto(chatID);
-                int betIdToDelete = it->getMatchNumberToID().at(std::stoi(message->text));
-                int amount = bdto.getBetAmountByID(betIdToDelete);
+                const int betIdToDelete = it->getMatchNumberToID().at(std::stoi(message->text));
+                const int amount = bdto.getBetAmountByID(betIdToDelete);
 
                 bdto.deleteBetByID(betIdToDelete);
 
                 PlayerDTO pdto(chatID);
-                double penaltyKoef = 0.9;
-                int returnAmount = amount * penaltyKoef;
+                constexpr double penaltyKoef = 0.1;
+                const int returnAmount = amount * (1.0 - penaltyKoef);
                 pdto.updateCoins(pdto.getCoins() + returnAmount);
 
                 std::string returnAmountstr = std::to_string(returnAmount);
@@ -367,8 +374,8 @@ int main(int argc, char *argv[])
                 return;
             }
 
-            int matchID = std::stoi(values.at(0));
-            std::string result = values.at(1);
+            const int matchID = std::stoi(values.at(0));
+            const std::string result = values.at(1);
             AdminDTO dto;
             dto.updateResult(matchID, result);
         }
