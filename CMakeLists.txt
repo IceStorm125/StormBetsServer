@@ -9,24 +9,8 @@ set(CMAKE_CXX_STANDARD_REQUIRED ON)
 
 add_subdirectory(tgbot-cpp)
 
-execute_process(
-    COMMAND apt install -y qtcreator qtbase5-dev qt5-qmake clang mysql-server libqt5sql5-mysql 
-    RESULT_VARIABLE QT_INSTALL_RESULT
-)
-
-# Check if the command was successful
-if(CONAN_RESULT)
-    message(FATAL_ERROR "Failed to run QT_INSTALL_COMMAND install command")
-endif()
-
 find_package(Qt5Core REQUIRED)
 find_package(Qt5Sql REQUIRED)
-
-execute_process(
-    COMMAND conan profile detect --force
-    COMMAND conan install ../conanfile.txt --build=missing
-    RESULT_VARIABLE CONAN_RESULT
-)
 
 # Check if the command was successful
 if(CONAN_RESULT)
