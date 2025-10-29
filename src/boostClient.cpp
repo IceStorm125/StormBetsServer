@@ -26,6 +26,7 @@ int BoostClient::getJsonDataFromURL(const std::string &URL, std::string &outResp
 
     std::string ARGUMENTS = URL.substr(URL.find("/api/"), URL.length());
     std::string TOURNAMENTS_URL = URL.substr(URL.find("api.rivalry"), URL.find("/api/") - URL.find("api.rivalry"));
+        std::cout << ARGUMENTS << "      " << TOURNAMENTS_URL << std::endl;
 
     try
     {
@@ -53,6 +54,7 @@ int BoostClient::getJsonDataFromURL(const std::string &URL, std::string &outResp
             return static_cast<int>(res.result());
         
         outResponce = boost::beast::buffers_to_string(res.body().data());
+        std::cout << outResponce << std::endl;
 
         // Закрываем соединение
         socket.shutdown(boost::asio::ip::tcp::socket::shutdown_both);

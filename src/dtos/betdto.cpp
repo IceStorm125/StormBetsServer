@@ -20,10 +20,10 @@ BetDTO::BetDTO(int chatID_)
 
 bool BetDTO::confirm(const Processing &bet)
 {
-    addMatch(bet);
     QString cmd("INSERT INTO bets(amount, koef, match_result_id, match_id, player_id) "
                 "VALUES(:amount, :koef, :match_result_id, :match_id, :player_id)");
     QSqlQuery query;
+    qDebug() << bet.getAmount() << bet.getKoef() << getMatchResultID(bet) << getMatchID(bet) << chatID;
     query.prepare(cmd);
     query.bindValue(":amount", bet.getAmount());
     query.bindValue(":koef", bet.getKoef());
@@ -217,7 +217,7 @@ int BetDTO::getMatchID(const Processing &bet)
     QString cmd = "SELECT id FROM matches WHERE api_id = :api_id";
     QSqlQuery query;
     query.prepare(cmd);
-    query.bindValue(":api_id", bet.getMatch().getID());
+    query.bindValue(":api_id", bet.getMatch().getApiID());
     exec(query);
 
     if (query.next())

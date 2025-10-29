@@ -11,11 +11,13 @@ class Match : public Event
 public:
 
     Match();
-    Match(int ID_, const QString &teamName1, const QString &teamName2, double koef1, double koef2, double koefDraw_ ,const QDateTime &time_);
+    Match(int ID_,const QString api_id_, const QString &tournamentName_, const QString &teamName1, const QString &teamName2, double koef1, double koefDraw_, double koef2 ,const QDateTime &time_);
 
     std::string toPrint() override;   
 
     int getID() const;
+
+    QString getApiID() const;
 
     QPair<QString, double> getTeam1() const;
 
@@ -27,6 +29,8 @@ public:
 
 private:
     int ID;
+    QString api_id;
+    QString tournamentName;
     QPair<QString, double> team1;
     QPair<QString, double> team2;
     double koefDraw;

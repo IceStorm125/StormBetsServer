@@ -35,7 +35,6 @@ include_directories(
 set(include_files
     include/client.h
     include/match.h
-    include/jsondataextractor.h
     include/keyboardcreator.h
     include/event.h
     include/processing.h
@@ -46,6 +45,7 @@ set(include_files
     include/dtos/dto.h
     include/dtos/betdto.h
     include/dtos/admindto.h
+    include/dtos/matchdto.h
     include/dbconnection.h
     include/curlClient.h
     include/boostClient.h
@@ -53,7 +53,6 @@ set(include_files
 
 set(source_files
     src/match.cpp
-    src/jsondataextractor.cpp
     src/keyboardcreator.cpp
     src/processing.cpp
     src/regexmatcher.cpp
@@ -61,6 +60,7 @@ set(source_files
     src/dtos/dto.cpp
     src/dtos/betdto.cpp
     src/dtos/admindto.cpp
+    src/dtos/matchdto.cpp
     src/dbconnection.cpp
     src/curlClient.cpp
     src/boostClient.cpp

@@ -16,7 +16,6 @@
 
 
 #include "processing.h"
-#include "jsondataextractor.h"
 #include "event.h"
 #include "keyboardcreator.h"
 #include "messagestosend.h"
@@ -25,6 +24,7 @@
 #include "dtos/playerdto.h"
 #include "dtos/betdto.h"
 #include "dtos/admindto.h"
+#include "dtos/matchdto.h"
 
 
 enum Tournaments
@@ -43,7 +43,6 @@ int main(int argc, char *argv[])
 
     Bot bot(TOKEN);
 
-    JsonDataExtractor extractor;
     std::vector<Processing> currentProceses;
 
     ReplyKeyboardRemove::Ptr ptrForRemoveKeyboard(new ReplyKeyboardRemove);
@@ -89,7 +88,7 @@ int main(int argc, char *argv[])
         bot.getApi().sendMessage(chatID, matchesInfo.size() ? matchesInfo : "No matches", false, 0, ptrForRemoveKeyboard);
     });
 
-    bot.getEvents().onAnyMessage([&bot, &extractor, &currentProceses, &ptrForRemoveKeyboard, &adminIsWorking, &menuKeyboard](Message::Ptr message) {
+    bot.getEvents().onAnyMessage([&bot, &currentProceses, &ptrForRemoveKeyboard, &adminIsWorking, &menuKeyboard](Message::Ptr message) {
         const long chatID{message->chat->id};
 
         if(QString::fromStdString(message->text).startsWith("/"))
@@ -111,7 +110,8 @@ int main(int argc, char *argv[])
                 if(message->text == Messages::PLACE_BET)
                 {
                     bot.getApi().sendMessage(chatID, Messages::LOADING, 0, false, ptrForRemoveKeyboard);
-                    std::vector<Match> matches = extractor.getUpcomingMatchesByTournamentID(Tournaments::CHAMPIONS_LEAGUE);
+                    MatchDTO mdto;
+                    std::vector<Match> matches = mdto.getAllMatches();
                     if(matches.empty())
                     {
                         bot.getApi().sendMessage(chatID, Messages::NO_MATCHES, 0, false, menuKeyboard);
@@ -125,7 +125,7 @@ int main(int argc, char *argv[])
                     MessageEventsGenerator<Match> gen;
                     std::string outMsg;
                     gen.generateMessage(matches, outMsg, numbersToSend);
-
+                    std::cout << outMsg << std::endl;
                     ReplyKeyboardMarkup::Ptr kb(new ReplyKeyboardMarkup);
                     KeyboardCreator::createKeyboard(numbersToSend, kb);
                     bot.getApi().sendMessage(chatID, outMsg, 0, false, kb);
@@ -202,7 +202,7 @@ int main(int argc, char *argv[])
                     const Match match = matches.at(std::stoi(message->text) - 1);
                     it->setMatch(match);
                     it->setStatus(Processing::Status::CHOOSING_WINNER);
-
+                    std::cout << "match id " << it->getMatch().toPrint()<< std::endl;
                     ReplyKeyboardMarkup::Ptr kb(new ReplyKeyboardMarkup);
 
                     if(match.getKoefDraw() != 0)
@@ -220,7 +220,7 @@ int main(int argc, char *argv[])
                 break;
             }
             case Processing::Status::CHOOSING_WINNER:{
-                if(const Match match = extractor.getMatchByID(it->getMatch().getID()).value(); message->text == match.getTeam1().first.toStdString())
+                if(const Match match = it->getMatch(); message->text == match.getTeam1().first.toStdString())
                 {
                     it->setResult(Processing::Result::W1);
                     it->setKoef(match.getTeam1().second);

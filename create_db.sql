@@ -23,6 +23,9 @@ CREATE TABLE IF NOT EXISTS `stormbets`.`matches` (
   `id` INT NOT NULL AUTO_INCREMENT,
   `team1` VARCHAR(45) NOT NULL,
   `team2` VARCHAR(45) NOT NULL,
+  `koef_w1` DOUBLE NOT NULL,
+  `koef_x` DOUBLE NOT NULL,
+  `koef_w2` DOUBLE NOT NULL,
   `api_id` INT NOT NULL,
   `time` VARCHAR(45) NOT NULL,
   `match_result_id` INT NULL,
@@ -63,3 +66,6 @@ CREATE TABLE IF NOT EXISTS `stormbets`.`bets` (
     REFERENCES `stormbets`.`players` (`id`)
     ON DELETE CASCADE
     ON UPDATE CASCADE);
+
+select * from matches;
+select * from bets;
