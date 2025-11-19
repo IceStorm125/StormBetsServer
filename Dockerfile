@@ -40,7 +40,7 @@ RUN mkdir -p build && cd build && cmake .. && make -j4
 # ---------------------------------------------------------
 # 2) Runtime stage (минимальный образ)
 # ---------------------------------------------------------
-FROM debian:bookworm-slim
+FROM debian:bookworm-slim AS runtime
 
 RUN apt-get update && apt-get install -y \
     libssl3 libboost-system1.74.0 zlib1g libcurl4 \
