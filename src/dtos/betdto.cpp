@@ -12,6 +12,16 @@
 #include "spdlog/spdlog.h"
 #include <fmt/core.h>
 
+#include <iostream>
+#include <chrono>
+#include <iomanip>
+#include <sstream>
+
+std::string getCurrentTime() {
+    static const int offset = 3;
+    return QDateTime::currentDateTime().addSecs(offset*60*60).toString("yyyy-MM-dd hh:mm:ss").toStdString();
+}
+
 
 BetDTO::BetDTO(int chatID_)
 {
@@ -20,16 +30,16 @@ BetDTO::BetDTO(int chatID_)
 
 bool BetDTO::confirm(const Processing &bet)
 {
-    QString cmd("INSERT INTO bets(amount, koef, match_result_id, match_id, player_id) "
-                "VALUES(:amount, :koef, :match_result_id, :match_id, :player_id)");
+    QString cmd("INSERT INTO bets(amount, koef, match_result_id, match_id, player_id, time) "
+                "VALUES(:amount, :koef, :match_result_id, :match_id, :player_id, :time);");
     QSqlQuery query;
-    qDebug() << bet.getAmount() << bet.getKoef() << getMatchResultID(bet) << getMatchID(bet) << chatID;
     query.prepare(cmd);
     query.bindValue(":amount", bet.getAmount());
     query.bindValue(":koef", bet.getKoef());
     query.bindValue(":match_result_id", getMatchResultID(bet));
     query.bindValue(":match_id", getMatchID(bet));
     query.bindValue(":player_id", chatID);
+    query.bindValue(":time", QString::fromStdString(getCurrentTime()));
 
     return exec(query);
 }
@@ -59,7 +69,7 @@ int BetDTO::getBetAmountByID(int id)
     }
     else
     {
-        spdlog::warn(query.lastError().text().toStdString());
+        spdlog::warn("getBetAmountByID" + query.lastError().text().toStdString());
 
     }
     return 0;
@@ -85,13 +95,14 @@ std::string BetDTO::playerCurrentBets()
         QString matchRes = record.value(2).toString();
         QString team1 = record.value(3).toString();
         QString team2 = record.value(4).toString();
-        QString time = record.value(5).toString();
+        QDateTime time = record.value(5).toDateTime();
 
         out += fmt::format("{} vs {}\n"
                           "Result: {}({})\n"
                           "Bet: {} -> {}\n"
                           "Time: {}\n\n",
-                          team1.toStdString(), team2.toStdString(), matchRes.toStdString(), koef, amount, static_cast<int>(amount * koef), time.toStdString());
+                          team1.toStdString(), team2.toStdString(), matchRes.toStdString(), koef, amount, static_cast<int>(amount * koef), 
+                          time.toString("dd.MM.yyyy hh:mm").toStdString());
     }
 
     return out;
@@ -119,7 +130,7 @@ std::string BetDTO::playerCurrentBetsToDelete(std::map<int, int> &betNumberToID)
         QString matchRes = record.value(2).toString();
         QString team1 = record.value(3).toString();
         QString team2 = record.value(4).toString();
-        QString time = record.value(5).toString();
+        QDateTime time = record.value(5).toDateTime();
         int number = record.value(6).toInt();
         int ID = record.value(7).toInt();
 
@@ -127,7 +138,8 @@ std::string BetDTO::playerCurrentBetsToDelete(std::map<int, int> &betNumberToID)
                           "Result: {}({})\n"
                           "Bet: {} -> {}\n"
                           "Time: {}\n\n",
-                          number, team1.toStdString(), team2.toStdString(), matchRes.toStdString(), koef, amount, static_cast<int>(amount * koef), time.toStdString());
+                          number, team1.toStdString(), team2.toStdString(), matchRes.toStdString(), koef, amount, static_cast<int>(amount * koef), 
+                          time.toString("dd.MM.yyyy hh:mm").toStdString());
 
         betNumberToID.insert({number, ID});
     }
@@ -155,7 +167,7 @@ std::string BetDTO::playerPlayedBets(int limit)
     }
 
     std::string out {""};
-    out += fmt::format("Last played bets\n\n");
+    out += "Last played bets\n\n";
 
     while (query.next())
     {
@@ -206,7 +218,7 @@ int BetDTO::getMatchResultID(const Processing &bet)
     }
     else
     {
-        spdlog::warn(query.lastError().text().toStdString());
+        spdlog::warn("getMatchResultID" + query.lastError().text().toStdString());
 
     }
     return 0;
@@ -228,21 +240,9 @@ int BetDTO::getMatchID(const Processing &bet)
     }
     else
     {
-        spdlog::warn(query.lastError().text().toStdString());
+        spdlog::warn("getMatchID" + query.lastError().text().toStdString());
 
     }
     return 0;
-}
-
-void BetDTO::addMatch(const Processing &bet)
-{
-    QString cmd = "INSERT INTO matches(team1, team2, api_id, time) VALUES(:team1, :team2, :api_id, :time)";
-    QSqlQuery query;
-    query.prepare(cmd);
-    query.bindValue(":team1", bet.getMatch().getTeam1().first);
-    query.bindValue(":team2", bet.getMatch().getTeam2().first);
-    query.bindValue(":api_id", bet.getMatch().getID());
-    query.bindValue(":time", bet.getMatch().getTime());
-    exec(query);
 }
 

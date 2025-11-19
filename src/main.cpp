@@ -6,8 +6,10 @@
 #include <QSqlQuery>
 #include <QPluginLoader>
 
+#include <map>
 #include <vector>
 #include <algorithm>
+#include <thread>
 
 #include <boost/algorithm/string.hpp>
 
@@ -20,6 +22,7 @@
 #include "keyboardcreator.h"
 #include "messagestosend.h"
 #include "messageeventsgenerator.hpp"
+#include "EnvManager.hpp"
 #include "regexmatcher.h"
 #include "dtos/playerdto.h"
 #include "dtos/betdto.h"
@@ -27,23 +30,31 @@
 #include "dtos/matchdto.h"
 
 
-enum Tournaments
-{
-    CHAMPIONS_LEAGUE = 3465,
-    BBdacha = 7573
-};
 
 int main(int argc, char *argv[])
 {
     using namespace TgBot;
 
-    const std::string TOKEN = "5197186113:AAFtm1pkRcWgssxEgW2XphepTkIGWDCHNx0";
-    const long ADMIN_ID = 427038898;
-    bool adminIsWorking = false;
+    spdlog::info("Loadding .env file...");
+    
+    auto& env = EnvManager::getInstance();
+    if(!env.isLoaded()) {
+        spdlog::error("Failed to load .env file");
+        return 1;
+    }
+    spdlog::info("Loaded .env file");
+    std::optional<std::string> TOKEN = env.getValue("BOT_TOKEN");
 
-    Bot bot(TOKEN);
+    if(!TOKEN.has_value()) 
+    {
+        spdlog::error("BOT_TOKEN not found in .env file");
+        return EXIT_FAILURE;
+    }
 
-    std::vector<Processing> currentProceses;
+
+    Bot bot(TOKEN.value());
+
+    std::map<long, std::unique_ptr<Processing>> currentProceses;
 
     ReplyKeyboardRemove::Ptr ptrForRemoveKeyboard(new ReplyKeyboardRemove);
 
@@ -52,59 +63,43 @@ int main(int argc, char *argv[])
 
     std::vector<BotCommand::Ptr> commands;
     BotCommand::Ptr cmdArray1(new BotCommand);
-    BotCommand::Ptr cmdArray2(new BotCommand);
     cmdArray1->command = "start";
     cmdArray1->description = "Start using bot";
-    cmdArray2->command = "admin";
-    cmdArray2->description = "Only for admin";
     commands.push_back(cmdArray1);
-    commands.push_back(cmdArray2);
     bot.getApi().setMyCommands(commands);
 
+
     bot.getEvents().onCommand("start", [&bot, &currentProceses, &menuKeyboard](Message::Ptr message) {
+        spdlog::info("User {} wrote command: {}", message->chat->id, message->text);
+
         const long chatID{message->chat->id};
 
         bot.getApi().sendMessage(chatID, Messages::CHOOSE_OPTION, 0, false, menuKeyboard);
 
-        if(auto it = std::remove_if(currentProceses.begin(), currentProceses.end(),[chatID](Processing &p){ return chatID == p.getUserID(); }); it != currentProceses.end())
-            currentProceses.erase(it, currentProceses.end());
+        if(auto it = currentProceses.find(chatID); it != currentProceses.end())
+            currentProceses.erase(it);
 
         PlayerDTO dto(chatID);
         dto.add(message->chat->firstName, message->chat->lastName);
-        currentProceses.push_back(Processing(chatID));
+        currentProceses[chatID] = std::make_unique<Processing>(chatID);
     });
 
-    bot.getEvents().onCommand("admin", [&bot, &adminIsWorking, &ptrForRemoveKeyboard](Message::Ptr message) {
-        const long chatID{message->chat->id};
-
-        if(chatID != ADMIN_ID)
-            return;
-
-        adminIsWorking = true;
-
-        AdminDTO dto;
-        std::string matchesInfo = dto.getAllMatchesWithoutResult();
-        bot.getApi().sendMessage(chatID, "Using: <matchID> <W1|W2|X>", false, 0, ptrForRemoveKeyboard);
-        bot.getApi().sendMessage(chatID, matchesInfo.size() ? matchesInfo : "No matches", false, 0, ptrForRemoveKeyboard);
-    });
-
-    bot.getEvents().onAnyMessage([&bot, &currentProceses, &ptrForRemoveKeyboard, &adminIsWorking, &menuKeyboard](Message::Ptr message) {
+    bot.getEvents().onAnyMessage([&bot, &currentProceses, &ptrForRemoveKeyboard, &menuKeyboard](Message::Ptr message) {
+        spdlog::info("User {} wrote message: {}", message->chat->id, message->text);
         const long chatID{message->chat->id};
 
         if(QString::fromStdString(message->text).startsWith("/"))
             return;
 
-        if(adminIsWorking && chatID == ADMIN_ID)
-            return;
-
-        if(auto it = std::find_if(currentProceses.begin(), currentProceses.end(),[chatID](Processing &p){ return chatID == p.getUserID(); }); it == currentProceses.end())
+        if(auto it = currentProceses.find(chatID); it == currentProceses.end())
         {
             bot.getApi().sendMessage(chatID, Messages::LOGIN, false, 0, ptrForRemoveKeyboard);
             return;
         }
         else
         {
-            switch (it->getStatus())
+            Processing &current = *(it->second);
+            switch (current.getStatus())
             {
             case Processing::Status::START:{
                 if(message->text == Messages::PLACE_BET)
@@ -125,13 +120,12 @@ int main(int argc, char *argv[])
                     MessageEventsGenerator<Match> gen;
                     std::string outMsg;
                     gen.generateMessage(matches, outMsg, numbersToSend);
-                    std::cout << outMsg << std::endl;
                     ReplyKeyboardMarkup::Ptr kb(new ReplyKeyboardMarkup);
                     KeyboardCreator::createKeyboard(numbersToSend, kb);
                     bot.getApi().sendMessage(chatID, outMsg, 0, false, kb);
 
-                    it->setUserMatches(matches);
-                    it->setStatus(Processing::Status::CHOOSING_MATCH);
+                    current.setUserMatches(matches);
+                    current.setStatus(Processing::Status::CHOOSING_MATCH);
                     break;
                 }
                 if (message->text == Messages::CURRENT_BETS)
@@ -166,7 +160,7 @@ int main(int argc, char *argv[])
                     else
                     {
                         bot.getApi().sendMessage(chatID, Messages::CHOOSE_BET_TO_DELETE, 0, false, ptrForRemoveKeyboard);
-                        it->setMatchNumberToID(betNumbersToID);
+                        current.setMatchNumberToID(betNumbersToID);
 
                         std::vector<std::string> numbersToSend;
                         numbersToSend.reserve(betNumbersToID.size());
@@ -174,7 +168,7 @@ int main(int argc, char *argv[])
                             numbersToSend.push_back(std::to_string(m.first));
                         });
 
-                        it->setStatus(Processing::Status::DELETTING_BET);
+                        current.setStatus(Processing::Status::DELETTING_BET);
 
                         ReplyKeyboardMarkup::Ptr kb(new ReplyKeyboardMarkup);
                         KeyboardCreator::createOneColumnKeyboard(numbersToSend, kb);
@@ -195,14 +189,13 @@ int main(int argc, char *argv[])
                 break;
             }
             case Processing::Status::CHOOSING_MATCH:{
-                if(RegexMatcher::isStringPositiveNumber(message->text) && std::stoi(message->text) <= static_cast<int>(it->getUserMatches().size()))
+                if(RegexMatcher::isStringPositiveNumber(message->text) && std::stoi(message->text) <= static_cast<int>(current.getUserMatches().size()))
                 {
-                    const std::vector<Match> matches = it->getUserMatches();
+                    const std::vector<Match> matches = current.getUserMatches();
 
                     const Match match = matches.at(std::stoi(message->text) - 1);
-                    it->setMatch(match);
-                    it->setStatus(Processing::Status::CHOOSING_WINNER);
-                    std::cout << "match id " << it->getMatch().toPrint()<< std::endl;
+                    current.setMatch(match);
+                    current.setStatus(Processing::Status::CHOOSING_WINNER);
                     ReplyKeyboardMarkup::Ptr kb(new ReplyKeyboardMarkup);
 
                     if(match.getKoefDraw() != 0)
@@ -220,20 +213,20 @@ int main(int argc, char *argv[])
                 break;
             }
             case Processing::Status::CHOOSING_WINNER:{
-                if(const Match match = it->getMatch(); message->text == match.getTeam1().first.toStdString())
+                if(const Match match = current.getMatch(); message->text == match.getTeam1().first.toStdString())
                 {
-                    it->setResult(Processing::Result::W1);
-                    it->setKoef(match.getTeam1().second);
+                    current.setResult(Processing::Result::W1);
+                    current.setKoef(match.getTeam1().second);
                 }
                 else if(message->text == match.getTeam2().first.toStdString())
                 {
-                    it->setResult(Processing::Result::W2);
-                    it->setKoef(match.getTeam2().second);
+                    current.setResult(Processing::Result::W2);
+                    current.setKoef(match.getTeam2().second);
                 }
                 else if(message->text == "Draw")
                 {
-                    it->setResult(Processing::Result::X);
-                    it->setKoef(match.getKoefDraw());
+                    current.setResult(Processing::Result::X);
+                    current.setKoef(match.getKoefDraw());
                 }
                 else
                 {
@@ -241,7 +234,7 @@ int main(int argc, char *argv[])
                     break;
                 }
                 bot.getApi().sendMessage(chatID, Messages::INPUT_AMOUNT, 0, false, ptrForRemoveKeyboard);
-                it->setStatus(Processing::Status::CHOOSING_AMOUNT);
+                current.setStatus(Processing::Status::CHOOSING_AMOUNT);
 
                 break;
             }
@@ -267,24 +260,24 @@ int main(int argc, char *argv[])
                     break;
                 }
 
-                it->setAmount(amount);
-                it->setStatus(Processing::Status::ACCEPTING);
+                current.setAmount(amount);
+                current.setStatus(Processing::Status::ACCEPTING);
 
                 bot.getApi().sendMessage(chatID, Messages::CONFIRM_BET);
                 ReplyKeyboardMarkup::Ptr kb(new ReplyKeyboardMarkup);
                 KeyboardCreator::createOneColumnKeyboard({Messages::CONFIRM, Messages::RESET}, kb);
-                bot.getApi().sendMessage(chatID, it->toPrint(), 0, false, kb);
+                bot.getApi().sendMessage(chatID, current.toPrint(), 0, false, kb);
                 break;
             }
             case Processing::Status::ACCEPTING:{
                 if(message->text == Messages::CONFIRM)
                 {
                     BetDTO dto(chatID);
-                    if(dto.confirm(*it))
+                    if(dto.confirm(current))
                     {
                         PlayerDTO pdto(chatID);
                         const int coins = pdto.getCoins();
-                        pdto.updateCoins(coins - it->getAmount());
+                        pdto.updateCoins(coins - current.getAmount());
                         bot.getApi().sendMessage(chatID, Messages::CONFIRMED, 0, false, ptrForRemoveKeyboard);
                     }
                 }
@@ -296,7 +289,7 @@ int main(int argc, char *argv[])
                 {
                     break;
                 }
-                it->reset();
+                current.reset();
                 bot.getApi().sendMessage(chatID, Messages::CHOOSE_OPTION, 0, false, menuKeyboard);
 
                 break;
@@ -309,7 +302,7 @@ int main(int argc, char *argv[])
                     break;
                 }
 
-                if(it->getMatchNumberToID().find(std::stoi(message->text)) == it->getMatchNumberToID().cend())
+                if(current.getMatchNumberToID().find(std::stoi(message->text)) == current.getMatchNumberToID().cend())
                 {
                     ReplyKeyboardMarkup::Ptr kb(new ReplyKeyboardMarkup);
                     bot.getApi().sendMessage(chatID, "There is no bet with this number");
@@ -317,7 +310,7 @@ int main(int argc, char *argv[])
                 }
 
                 BetDTO bdto(chatID);
-                const int betIdToDelete = it->getMatchNumberToID().at(std::stoi(message->text));
+                const int betIdToDelete = current.getMatchNumberToID().at(std::stoi(message->text));
                 const int amount = bdto.getBetAmountByID(betIdToDelete);
 
                 bdto.deleteBetByID(betIdToDelete);
@@ -331,7 +324,7 @@ int main(int argc, char *argv[])
                 returnAmountstr.erase (returnAmountstr.find_last_not_of('.') + 1, std::string::npos);
                 bot.getApi().sendMessage(chatID, "Bet deleted. You got " + returnAmountstr + " coins back.");
 
-                it->reset();
+                current.reset();
                 bot.getApi().sendMessage(chatID, Messages::CHOOSE_OPTION, 0, false, menuKeyboard);
 
                 break;
@@ -340,51 +333,21 @@ int main(int argc, char *argv[])
         }
     });
 
-    // Admin pannel
-    bot.getEvents().onAnyMessage([&bot, &adminIsWorking](Message::Ptr message) {
-        const long chatID{message->chat->id};
-
-        if(chatID == ADMIN_ID && adminIsWorking)
-        {
-            std::string strMessage = message->text;
-            boost::trim(strMessage);
-
-            if(strMessage == "End")
-            {
-                adminIsWorking = false;
-                return;
-            }
-
-            std::vector<std::string> values;
-            boost::split(values, strMessage, boost::is_any_of(" "), boost::token_compress_on);
-
-            if(values.size() != 2)
-            {
-                bot.getApi().sendMessage(chatID, "Bad input values");
-                return;
-            }
-            if(!RegexMatcher::isStringPositiveNumber(values.at(0)))
-            {
-                bot.getApi().sendMessage(chatID, "Bad first value");
-                return;
-            }
-            if(values.at(1) != "W1" && values.at(1) != "W2" && values.at(1) != "X")
-            {
-                bot.getApi().sendMessage(chatID, "Bad second value");
-                return;
-            }
-
-            const int matchID = std::stoi(values.at(0));
-            const std::string result = values.at(1);
-            AdminDTO dto;
-            dto.updateResult(matchID, result);
-        }
-    });
 
     signal(SIGINT, [](int s) {
         printf("SIGINT got\n");
         exit(0);
     });
+
+    auto t = std::thread([&bot](){
+        while (true)
+        {
+            AdminDTO dto;
+            dto.registerResults(bot);
+            std::this_thread::sleep_for(std::chrono::minutes(1));
+        }
+    });
+    t.detach();
 
     try
     {
@@ -398,10 +361,13 @@ int main(int argc, char *argv[])
             // qInfo() << "Long poll started";
             longPoll.start();
         }
+
+
     } catch (std::exception& e)
     {
         spdlog::error(e.what());
     }
+
 
     return 0;
 }

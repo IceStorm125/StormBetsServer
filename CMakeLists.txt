@@ -7,6 +7,7 @@ set(CMAKE_BUILD_TYPE "Release")
 set(CMAKE_CXX_STANDARD 20)
 set(CMAKE_CXX_STANDARD_REQUIRED ON)
 
+
 add_subdirectory(tgbot-cpp)
 
 find_package(Qt5Core REQUIRED)
@@ -22,9 +23,9 @@ include("${CMAKE_CURRENT_BINARY_DIR}/Release/generators/conan_toolchain.cmake")
 find_package(spdlog REQUIRED)
 find_package(nlohmann_json REQUIRED)
 find_package(fmt REQUIRED)
-find_package(CURL REQUIRED)
 find_package(Boost COMPONENTS system REQUIRED)
 find_package(GTest REQUIRED)
+find_package(date REQUIRED)
 
 
 include_directories(
@@ -33,7 +34,6 @@ include_directories(
     )
 
 set(include_files
-    include/client.h
     include/match.h
     include/keyboardcreator.h
     include/event.h
@@ -47,8 +47,6 @@ set(include_files
     include/dtos/admindto.h
     include/dtos/matchdto.h
     include/dbconnection.h
-    include/curlClient.h
-    include/boostClient.h
    )
 
 set(source_files
@@ -62,8 +60,7 @@ set(source_files
     src/dtos/admindto.cpp
     src/dtos/matchdto.cpp
     src/dbconnection.cpp
-    src/curlClient.cpp
-    src/boostClient.cpp
+    src/EnvManager.hpp
 )
 
 set(tests_sources
@@ -84,8 +81,8 @@ target_link_libraries(StormBetsServer
     Boost::system
     spdlog::spdlog 
     fmt::fmt
-    CURL::libcurl 
     nlohmann_json::nlohmann_json
+    date::date
 )
 
 add_executable(tests
@@ -103,8 +100,8 @@ target_link_libraries(tests
     Boost::system
     spdlog::spdlog 
     fmt::fmt
-    CURL::libcurl 
     nlohmann_json::nlohmann_json
     gtest::gtest
+    date::date
 )
 

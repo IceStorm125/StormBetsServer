@@ -61,7 +61,7 @@ int PlayerDTO::getCountAll()
     QString cmd1("SELECT COUNT(*) FROM bets b "
                  "JOIN (matches m) ON (b.match_id = m.id) "
                  "WHERE b.player_id = :id "
-                 "AND m.match_result_id IS NOT NULL");
+                 "AND b.paid IS NOT NULL");
     QSqlQuery query;
     query.prepare(cmd1);
     query.bindValue(":id", chatID);
@@ -79,7 +79,7 @@ int PlayerDTO::getCountWin()
     QString cmd2("SELECT COUNT(*) FROM bets b "
                  "JOIN (matches m) ON (b.match_id = m.id) "
                  "WHERE b.player_id = :id "
-                 "AND m.match_result_id IS NOT NULL "
+                 "AND b.paid IS NOT NULL "
                  "AND b.match_result_id = m.match_result_id");
     QSqlQuery query;
     query.prepare(cmd2);
@@ -98,7 +98,7 @@ int PlayerDTO::getTotalSpent()
     QString cmd3("SELECT SUM(b.amount) FROM bets b "
                  "JOIN (matches m) ON (b.match_id = m.id) "
                  "WHERE b.player_id = :id "
-                 "AND m.match_result_id IS NOT NULL");
+                 "AND b.paid IS NOT NULL");
     QSqlQuery query;
     query.prepare(cmd3);
     query.bindValue(":id", chatID);
@@ -116,7 +116,7 @@ int PlayerDTO::getTotalGain()
     QString cmd4("SELECT SUM(b.amount * b.koef) FROM bets b "
                  "JOIN (matches m) ON (b.match_id = m.id) "
                  "WHERE b.player_id = :id "
-                 "AND m.match_result_id IS NOT NULL "
+                 "AND b.paid IS NOT NULL "
                  "AND b.match_result_id = m.match_result_id");
     QSqlQuery query;
     query.prepare(cmd4);
@@ -133,6 +133,12 @@ int PlayerDTO::getTotalGain()
 std::string PlayerDTO::getStats()
 {
     int countAll = getCountAll();
+
+    if(countAll <= 0)   
+    {
+        return "You don't have played bets";
+    }
+
     int countWin = getCountWin();
     int totalSpent = getTotalSpent();
     int totalGain = getTotalGain();

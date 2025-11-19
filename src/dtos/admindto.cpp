@@ -9,49 +9,44 @@
 
 #include <fmt/core.h>
 
+#include "messagestosend.h"
+
 
 AdminDTO::AdminDTO()
 {
 
 }
 
-std::string AdminDTO::getAllMatchesWithoutResult()
+std::vector<int> AdminDTO::getAllMatchesIdWithResult()
 {
-    QString cmd = "SELECT id, team1, team2, time FROM matches WHERE match_result_id IS NULL";
+    QString cmd = "SELECT id FROM matches WHERE match_result_id IS NOT NULL";
     QSqlQuery query;
     query.prepare(cmd);
     exec(query);
 
-    std::string out{""};
+    std::vector<int> ids;
     while (query.next())
     {
         QSqlRecord record = query.record();
         int id = record.value(0).toInt();
-        QString team1 = record.value(1).toString();
-        QString team2 = record.value(2).toString();
-        QString time = record.value(3).toString();
-
-        out += fmt::format("{} | {} vs {} | {}\n", id, team1.toStdString(), team2.toStdString(), time.toStdString());  
+        ids.push_back(id);
     }
 
-    return out;
+    return ids;
 }
 
-bool AdminDTO::updateResult(int matchID, const std::string &result)
+void AdminDTO::registerResults(const TgBot::Bot &bot)
 {
-    QString cmd("UPDATE matches SET matches.match_result_id = (SELECT id FROM match_results WHERE match_results.name = :result) WHERE id = :matchID");
-    QSqlQuery query;
-    query.prepare(cmd);
-    query.bindValue(":matchID", matchID);
-    query.bindValue(":result", QString::fromStdString(result));
-    exec(query);
-
-    return updateCoins(matchID);
+    std::vector<int> matchIDs = getAllMatchesIdWithResult();
+    for (auto id : matchIDs)
+    {
+        updateCoins(id, bot);
+    }
 }
 
-bool AdminDTO::updateCoins(int matchID)
+bool AdminDTO::updateCoins(int matchID, const TgBot::Bot &bot)
 {
-    QString selectBetsCmd("SELECT amount, koef, match_result_id, player_id FROM bets WHERE match_id = :matchID");
+    QString selectBetsCmd("SELECT id, amount, koef, match_result_id, player_id FROM bets WHERE match_id = :matchID AND paid IS NULL");
     QSqlQuery selectBetsQuery;
     selectBetsQuery.prepare(selectBetsCmd);
     selectBetsQuery.bindValue(":matchID", matchID);
@@ -60,12 +55,13 @@ bool AdminDTO::updateCoins(int matchID)
     while(selectBetsQuery.next())
     {
         QSqlRecord record = selectBetsQuery.record();
-        int amount = record.value(0).toInt();      
-        double koef = record.value(1).toDouble();
-        int match_result_id_from_bets = record.value(2).toInt();
-        long player_id = record.value(3).toLongLong();
+        int bet_id = record.value(0).toInt();
+        int amount = record.value(1).toInt();
+        double koef = record.value(2).toDouble();
+        int match_result_id_from_bets = record.value(3).toInt();
+        int player_id = record.value(4).toInt();
 
-        QString selectIDcmd = "SELECT match_result_id FROM matches WHERE id = :matchID";
+        QString selectIDcmd = "SELECT match_result_id, team1, team2 FROM matches WHERE id = :matchID";
         QSqlQuery selectIDquery;
         selectIDquery.prepare(selectIDcmd);
         selectIDquery.bindValue(":matchID", matchID);
@@ -73,15 +69,30 @@ bool AdminDTO::updateCoins(int matchID)
 
         if(selectIDquery.next())
         {
+            QString updatePaidStatus = "UPDATE bets SET bets.paid = 1 WHERE id = :betID";
+            QSqlQuery updatePaidStatusQuery;
+            updatePaidStatusQuery.prepare(updatePaidStatus);
+            updatePaidStatusQuery.bindValue(":betID", bet_id);
+            exec(updatePaidStatusQuery);
+
             QSqlRecord record = selectIDquery.record();
             int match_result_id = record.value(0).toInt();
+            QString team1 = record.value(1).toString();
+            QString team2 = record.value(2).toString();
 
             if(match_result_id_from_bets == match_result_id)
             {
                 PlayerDTO dto(player_id);
                 dto.updateCoins(dto.getCoins() + round(amount * koef));
+                bot.getApi().sendMessage(player_id, fmt::format("{} vs {}({})\nBet: {} on {}({})\nResult: {}\nCoins change: +{}", team1.toStdString(), team2.toStdString(), 
+                matchResultIDToName[match_result_id], amount, matchResultIDToName[match_result_id_from_bets], koef, Emojis::CHECK_MARK, round(amount * koef)));
             }
-        }
+            else
+            {
+                bot.getApi().sendMessage(player_id, fmt::format("{} vs {}({})\nBet: {} on {}({})\nResult: {}\nCoins change: -{}", team1.toStdString(), team2.toStdString(), 
+                matchResultIDToName[match_result_id], amount, matchResultIDToName[match_result_id_from_bets], koef, Emojis::CROSS_MARK, amount));
+            }
+        }     
     }
 
     return true;

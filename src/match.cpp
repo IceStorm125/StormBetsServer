@@ -25,7 +25,7 @@ std::string Match::toPrint()
     std::string out = fmt::format("{} ({}) vs {} ({})\n", team1.first.toStdString(), team1.second, team2.first.toStdString(), team2.second);
     out += fmt::format("Tournament: {}\n", tournamentName.toStdString());
     if(koefDraw != 0) out+= fmt::format("Draw: {}\n", koefDraw);
-    out += fmt::format("{}\n\n", time.toString("dd.MM.yyyy hh:mm").toStdString());
+    out += fmt::format("{}\n\n", time.addSecs(3*60*60).toString("dd.MM.yyyy hh:mm").toStdString());
 
     return out;
 }

@@ -31,8 +31,13 @@ std::vector<Match> MatchDTO::getAllMatches()
         double koef_X = record.value(6).toDouble();
         double koef_W2 = record.value(7).toDouble();
         QDateTime time = record.value(8).toDateTime();
-        Match match(id, api_id, title, team1, team2, koef_W1, koef_X, koef_W2, time);
-        matches.push_back(match);
+
+        if(time > QDateTime::currentDateTime().addSecs(15*60))
+        {
+            Match match(id, api_id, title, team1, team2, koef_W1, koef_X, koef_W2, time);
+            matches.push_back(match);
+        }
+        
     }
     return matches;
 }

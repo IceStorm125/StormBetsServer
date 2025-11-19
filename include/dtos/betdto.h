@@ -28,10 +28,6 @@ private:
 
     int getMatchResultID(const Processing &bet);
     int getMatchID(const Processing &bet);
-    void addMatch(const Processing &bet);
-
-
-
 };
 
 

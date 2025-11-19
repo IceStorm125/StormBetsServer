@@ -6,12 +6,13 @@
 
 DTO::DTO()
 {
-    db = DBconnection::getInstance().getDB();
+    connection = std::make_unique<DBconnection>();
+    db = connection->getDB();
 }
 
 DTO::~DTO()
 {
-    //db.close();
+    db.close();
 }
 
 void DTO::begin()
@@ -31,15 +32,21 @@ void DTO::commit()
 
 void DTO::close()
 {
-    db.close();
+    std::unique_lock<std::mutex> lock(mt);
+
+    if(db.isOpen())
+    {
+        db.close();
+    }
 }
 
 bool DTO::exec(QSqlQuery &query)
 {
+    std::unique_lock<std::mutex> lock(mt);
     begin();
     if(!query.exec())
     {
-        spdlog::warn(query.lastError().text().toStdString());
+        spdlog::warn("exec" + query.lastError().text().toStdString());
         rollBack();
         return false;
     }

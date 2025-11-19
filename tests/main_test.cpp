@@ -1,7 +1,6 @@
 #include <gtest/gtest.h>
 
 #include "regex_test.hpp"
-#include "client_test.hpp"
 
 int main(int argc, char *argv[])
 {
