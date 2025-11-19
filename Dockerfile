@@ -34,7 +34,7 @@ COPY CMakeLists.txt ./
 COPY src/ ./src/
 COPY include/ ./include/
 COPY tests/ ./tests/
-#COPY .env ./
+COPY wait-for-it.sh ./
 
 # Сборка проекта
 RUN cd build && cmake .. && make -j4
