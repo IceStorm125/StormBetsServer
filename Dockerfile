@@ -34,6 +34,7 @@ COPY include/ ./include/
 COPY tests/ ./tests/
 COPY wait-for-it.sh ./
 
+RUN chmod +x /app/wait-for-it.sh
 # Сборка проекта
 RUN mkdir -p build && cd build && cmake .. && make -j4
 
@@ -52,5 +53,7 @@ WORKDIR /app
 # Копируем собранный бинарник и скрипт wait-for-it.sh
 COPY --from=builder /app/build/StormBetsServer .
 COPY --from=builder /app/wait-for-it.sh .
+
+RUN chmod +x /app/wait-for-it.sh
 
 CMD ["./StormBetsServer"]
