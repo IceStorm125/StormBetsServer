@@ -42,7 +42,6 @@ DBconnection::DBconnection()
     }
 }
 
-
 DBconnection::~DBconnection()
 {
     if(db.isOpen())
