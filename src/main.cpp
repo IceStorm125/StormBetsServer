@@ -35,6 +35,15 @@ int main(int argc, char *argv[])
 {
     using namespace TgBot;
 
+    auto console_sink = std::make_shared<spdlog::sinks::stdout_color_sink_mt>();
+    auto file_sink = std::make_shared<spdlog::sinks::basic_file_sink_mt>("StormBetsServerLog.txt", false);
+
+    std::vector<spdlog::sink_ptr> sinks {console_sink, file_sink};
+    auto logger = std::make_shared<spdlog::logger>("main_logger", sinks.begin(), sinks.end());
+
+    spdlog::register_logger(logger); 
+    spdlog::set_default_logger(logger); 
+
     spdlog::info("Loadding .env file...");
     
     auto& env = EnvManager::getInstance();
@@ -50,7 +59,6 @@ int main(int argc, char *argv[])
         spdlog::error("BOT_TOKEN not found in .env file");
         return EXIT_FAILURE;
     }
-
 
     Bot bot(TOKEN.value());
 
