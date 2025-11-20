@@ -10,11 +10,14 @@
 #include <vector>
 #include <algorithm>
 #include <thread>
+#include <memory>
 
 #include <boost/algorithm/string.hpp>
 
 #include "tgbot/tgbot.h"
-#include "spdlog/spdlog.h"
+#include <spdlog/spdlog.h>
+#include <spdlog/sinks/stdout_color_sinks.h>
+#include <spdlog/sinks/basic_file_sink.h>
 
 
 #include "processing.h"
