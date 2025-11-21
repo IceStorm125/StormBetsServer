@@ -37,8 +37,8 @@ std::vector<int> AdminDTO::getAllMatchesIdWithResult()
 
 void AdminDTO::registerResults(const TgBot::Bot &bot)
 {
-    std::vector<int> matchIDs = getAllMatchesIdWithResult();
-    for (auto id : matchIDs)
+    const std::vector<int> matchIDs = getAllMatchesIdWithResult();
+    for (const auto& id : matchIDs)
     {
         updateCoins(id, bot);
     }
@@ -51,7 +51,7 @@ bool AdminDTO::updateCoins(int matchID, const TgBot::Bot &bot)
     selectBetsQuery.prepare(selectBetsCmd);
     selectBetsQuery.bindValue(":matchID", matchID);
     exec(selectBetsQuery);
-
+    
     while(selectBetsQuery.next())
     {
         QSqlRecord record = selectBetsQuery.record();
@@ -82,8 +82,13 @@ bool AdminDTO::updateCoins(int matchID, const TgBot::Bot &bot)
 
             if(match_result_id_from_bets == match_result_id)
             {
-                PlayerDTO dto(player_id);
-                dto.updateCoins(dto.getCoins() + round(amount * koef));
+                QString cmd("UPDATE players SET players.coins = players.coins + :coins WHERE players.id=:id");
+                QSqlQuery query;
+                query.prepare(cmd);
+                query.bindValue(":coins", round(amount * koef));
+                query.bindValue(":id", player_id);
+                exec(query);
+
                 bot.getApi().sendMessage(player_id, fmt::format("{} vs {}({})\nBet: {} on {}({})\nResult: {}\nCoins change: +{}", team1.toStdString(), team2.toStdString(), 
                 matchResultIDToName[match_result_id], amount, matchResultIDToName[match_result_id_from_bets], koef, Emojis::CHECK_MARK, round(amount * koef)));
             }
