@@ -46,6 +46,7 @@ int main(int argc, char *argv[])
 
     spdlog::register_logger(logger); 
     spdlog::set_default_logger(logger); 
+    spdlog::flush_on(spdlog::level::info);
 
     spdlog::info("Loadding .env file...");
     
