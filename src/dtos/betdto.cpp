@@ -80,7 +80,7 @@ std::string BetDTO::playerCurrentBets()
     QString cmd = "SELECT b.amount, b.koef, mr.name, m.team1, m.team2, m.time FROM bets b "
                   "JOIN (matches m, match_results mr) ON (m.id = b.match_id AND mr.id = b.match_result_id) "
                   "WHERE player_id = :chatID AND m.match_result_id IS NULL "
-                  "ORDER BY m.time DESC;";
+                  "ORDER BY m.time ASC;";
     QSqlQuery query;
     query.prepare(cmd);
     query.bindValue(":chatID", chatID);
@@ -113,14 +113,14 @@ std::string BetDTO::playerCurrentBetsToDelete(std::map<int, int> &betNumberToID)
     QString cmd = "SELECT b.amount, b.koef, mr.name, m.team1, m.team2, m.time, ROW_NUMBER() OVER( ORDER BY m.time DESC) AS 'rownumber', b.id FROM bets b "
                   "JOIN (matches m, match_results mr) ON (m.id = b.match_id AND mr.id = b.match_result_id) "
                   "WHERE player_id = :chatID AND m.match_result_id IS NULL "
-                  "ORDER BY m.time DESC;";
+                  "ORDER BY m.time ASC;";
 
     QSqlQuery query;
     query.prepare(cmd);
     query.bindValue(":chatID", chatID);
     exec(query);
 
-        std::string out{""};
+    std::string out{""};
 
     while (query.next())
     {
