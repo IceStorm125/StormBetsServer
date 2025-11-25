@@ -13,7 +13,8 @@ std::vector<Match> MatchDTO::getAllMatches()
                    "JOIN tournaments t ON t.id = m.tournament_id "
                    "WHERE m.match_result_id IS NULL "
                    "ORDER BY m.time;";
-    QSqlQuery query;
+    QSqlDatabase& db = DBconnection::connection(); 
+    QSqlQuery query(db);
     query.prepare(cmd);
     exec(query);
 

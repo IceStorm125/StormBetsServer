@@ -1,5 +1,6 @@
 #include "dtos/playerdto.h"
 #include "dtos/admindto.h"
+#include "dbconnection.h"
 
 #include <QDebug>
 #include <QtSql>
@@ -12,6 +13,7 @@
 #include "messagestosend.h"
 
 
+
 AdminDTO::AdminDTO()
 {
 
@@ -20,7 +22,8 @@ AdminDTO::AdminDTO()
 std::vector<int> AdminDTO::getAllMatchesIdWithResult()
 {
     QString cmd = "SELECT id FROM matches WHERE match_result_id IS NOT NULL";
-    QSqlQuery query;
+    QSqlDatabase& db = DBconnection::connection();
+    QSqlQuery query(db);
     query.prepare(cmd);
     exec(query);
 
@@ -47,7 +50,8 @@ void AdminDTO::registerResults(const TgBot::Bot &bot)
 bool AdminDTO::updateCoins(int matchID, const TgBot::Bot &bot)
 {
     QString selectBetsCmd("SELECT id, amount, koef, match_result_id, player_id FROM bets WHERE match_id = :matchID AND paid IS NULL");
-    QSqlQuery selectBetsQuery;
+    QSqlDatabase& db = DBconnection::connection();
+    QSqlQuery selectBetsQuery(db);
     selectBetsQuery.prepare(selectBetsCmd);
     selectBetsQuery.bindValue(":matchID", matchID);
     exec(selectBetsQuery);
@@ -62,7 +66,8 @@ bool AdminDTO::updateCoins(int matchID, const TgBot::Bot &bot)
         int player_id = record.value(4).toInt();
 
         QString selectIDcmd = "SELECT match_result_id, team1, team2 FROM matches WHERE id = :matchID";
-        QSqlQuery selectIDquery;
+        QSqlQuery selectIDquery(db);
+        
         selectIDquery.prepare(selectIDcmd);
         selectIDquery.bindValue(":matchID", matchID);
         exec(selectIDquery);
@@ -70,7 +75,7 @@ bool AdminDTO::updateCoins(int matchID, const TgBot::Bot &bot)
         if(selectIDquery.next())
         {
             QString updatePaidStatus = "UPDATE bets SET bets.paid = 1 WHERE id = :betID";
-            QSqlQuery updatePaidStatusQuery;
+            QSqlQuery updatePaidStatusQuery(db);
             updatePaidStatusQuery.prepare(updatePaidStatus);
             updatePaidStatusQuery.bindValue(":betID", bet_id);
             exec(updatePaidStatusQuery);
@@ -83,7 +88,7 @@ bool AdminDTO::updateCoins(int matchID, const TgBot::Bot &bot)
             if(match_result_id_from_bets == match_result_id)
             {
                 QString cmd("UPDATE players SET players.coins = players.coins + :coins WHERE players.id=:id");
-                QSqlQuery query;
+                QSqlQuery query(db);
                 query.prepare(cmd);
                 query.bindValue(":coins", round(amount * koef));
                 query.bindValue(":id", player_id);

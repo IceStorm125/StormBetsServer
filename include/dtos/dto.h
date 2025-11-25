@@ -13,15 +13,9 @@ public:
     DTO();
     ~DTO();
 private:
-    QSqlDatabase db;
-    std::unique_ptr<DBconnection> connection;
     std::mutex mt;
 
 protected:
-    void begin();
-    void rollBack();
-    void commit();
-    void close();
     bool exec(QSqlQuery &query);
 };
 

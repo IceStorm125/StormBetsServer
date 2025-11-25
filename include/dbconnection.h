@@ -8,10 +8,10 @@ class DBconnection
 public:
     DBconnection();
     ~DBconnection();
-
-    QSqlDatabase getDB();
+    
+    static QSqlDatabase& connection();
+    static QSqlDatabase createConnection();
 private:
-    QSqlDatabase db;
 };
 
 #endif // DBCONNECTION_H
