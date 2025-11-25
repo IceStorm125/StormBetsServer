@@ -375,9 +375,14 @@ int main(int argc, char *argv[])
         }
 
 
-    } catch (std::exception& e)
-    {
-        spdlog::error(e.what());
+    } catch (const std::runtime_error& e) {
+        spdlog::error("runtime_error: {}", e.what());
+    }
+    catch (const std::logic_error& e) {
+        spdlog::error("logic_error: {}", e.what());
+    }
+    catch (const std::exception& e) {
+        spdlog::error("exception: {}", e.what());
     }
 
 
