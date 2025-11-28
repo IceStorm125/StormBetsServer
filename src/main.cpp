@@ -33,13 +33,41 @@
 #include "dtos/matchdto.h"
 
 
+void runBot(TgBot::Bot& bot) {
+    TgBot::TgLongPoll longPoll(bot);
+
+    int retryDelay = 1; 
+    const int retryDelayMax = 60;
+
+    while (true) {
+        try {
+            longPoll.start();
+            retryDelay = 1; 
+        }
+        catch (TgBot::TgException& e) {
+            spdlog::error("Telegram API error: {}", e.what());
+        }
+        catch (std::runtime_error& e) {
+            spdlog::error("Runtime error: {}", e.what());
+        }
+        catch (std::exception& e) {
+            spdlog::error("Unexpected error: {}", e.what());
+        }
+
+        // spdlog::warn("LongPoll failed. Retrying in {} sec...", retryDelay);
+        std::this_thread::sleep_for(std::chrono::seconds(retryDelay));
+
+        retryDelay = std::min(retryDelay * 2, retryDelayMax);
+    }
+}
+
 
 int main(int argc, char *argv[])
 {
     using namespace TgBot;
 
     auto console_sink = std::make_shared<spdlog::sinks::stdout_color_sink_mt>();
-    auto file_sink = std::make_shared<spdlog::sinks::basic_file_sink_mt>("/app/StormBetsServerLog.txt", false);
+    auto file_sink = std::make_shared<spdlog::sinks::basic_file_sink_mt>("StormBetsServerLog.txt", false);
 
     std::vector<spdlog::sink_ptr> sinks {console_sink, file_sink};
     auto logger = std::make_shared<spdlog::logger>("main_logger", sinks.begin(), sinks.end());
@@ -361,30 +389,14 @@ int main(int argc, char *argv[])
     });
     t.detach();
 
-    try
-    {
-        printf("Bot username: %s\n", bot.getApi().getMe()->username.c_str());
+    try {     
         bot.getApi().deleteWebhook();
 
-        TgLongPoll longPoll(bot);
-
-        while (true)
-        {
-            // qInfo() << "Long poll started";
-            longPoll.start();
-        }
-
-
-    } catch (const std::runtime_error& e) {
-        spdlog::error("runtime_error: {}", e.what());
+        runBot(bot);
     }
-    catch (const std::logic_error& e) {
-        spdlog::error("logic_error: {}", e.what());
+    catch (std::exception& e) {
+        spdlog::critical("Fatal error: {}", e.what());
     }
-    catch (const std::exception& e) {
-        spdlog::error("exception: {}", e.what());
-    }
-
 
     return 0;
 }
