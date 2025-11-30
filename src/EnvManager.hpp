@@ -44,7 +44,6 @@ private:
     void load(const std::string& filePath) {
         std::ifstream file(filePath);
         if (!file.is_open()) {
-            std::cerr << "Не удалось открыть файл: " << filePath << std::endl;
             loaded_ = false;
             return;
         }
