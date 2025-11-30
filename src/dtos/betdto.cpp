@@ -35,7 +35,7 @@ bool BetDTO::confirm(const Processing &bet)
 {
     QString cmd("INSERT INTO bets(amount, koef, match_result_id, match_id, player_id, time) "
                 "VALUES(:amount, :koef, :match_result_id, :match_id, :player_id, :time);");
-    QSqlDatabase& db = DBconnection::connection(); 
+    QSqlDatabase db = DBconnection::connection();
     QSqlQuery query(db);
     query.prepare(cmd);
     query.bindValue(":amount", bet.getAmount());
@@ -51,7 +51,7 @@ bool BetDTO::confirm(const Processing &bet)
 bool BetDTO::deleteBetByID(int id)
 {
     QString cmd = "DELETE FROM bets WHERE id = :id;";
-    QSqlDatabase& db = DBconnection::connection(); 
+    QSqlDatabase db = DBconnection::connection();
     QSqlQuery query(db);
     query.prepare(cmd);
     query.bindValue(":id", id);
@@ -61,7 +61,7 @@ bool BetDTO::deleteBetByID(int id)
 int BetDTO::getBetAmountByID(int id)
 {
     QString cmd = "SELECT amount FROM bets WHERE id = :id;";
-    QSqlDatabase& db = DBconnection::connection(); 
+    QSqlDatabase db = DBconnection::connection();
     QSqlQuery query(db);
     query.prepare(cmd);
     query.bindValue(":id", id);
@@ -87,7 +87,7 @@ std::string BetDTO::playerCurrentBets()
                   "JOIN (matches m, match_results mr) ON (m.id = b.match_id AND mr.id = b.match_result_id) "
                   "WHERE player_id = :chatID AND m.match_result_id IS NULL "
                   "ORDER BY m.time ASC;";
-    QSqlDatabase& db = DBconnection::connection(); 
+    QSqlDatabase db = DBconnection::connection();
     QSqlQuery query(db);
     query.prepare(cmd);
     query.bindValue(":chatID", chatID);
@@ -121,7 +121,7 @@ std::string BetDTO::playerCurrentBetsToDelete(std::map<int, int> &betNumberToID)
                   "JOIN (matches m, match_results mr) ON (m.id = b.match_id AND mr.id = b.match_result_id) "
                   "WHERE player_id = :chatID AND m.match_result_id IS NULL "
                   "ORDER BY m.time ASC;";
-    QSqlDatabase& db = DBconnection::connection(); 
+    QSqlDatabase db = DBconnection::connection();
     QSqlQuery query(db);
     query.prepare(cmd);
     query.bindValue(":chatID", chatID);
@@ -161,7 +161,7 @@ std::string BetDTO::playerPlayedBets(int limit)
                   "WHERE player_id = :chatID AND m.match_result_id IS NOT NULL "
                   "ORDER BY m.time DESC "
                   "LIMIT :limit;";
-    QSqlDatabase& db = DBconnection::connection(); 
+    QSqlDatabase db = DBconnection::connection();
     QSqlQuery query(db);
     query.prepare(cmd);
     query.bindValue(":chatID", chatID);
@@ -213,7 +213,7 @@ std::string BetDTO::playerPlayedBets(int limit)
 int BetDTO::getMatchResultID(const Processing &bet)
 {
     QString cmd = "SELECT id FROM match_results WHERE name = :name";
-    QSqlDatabase& db = DBconnection::connection(); 
+    QSqlDatabase db = DBconnection::connection();
     QSqlQuery query(db);
     query.prepare(cmd);
     query.bindValue(":name", bet.getResult() == Processing::Result::W1 ? "W1" : bet.getResult() == Processing::Result::W2 ? "W2" : "X");
@@ -236,7 +236,7 @@ int BetDTO::getMatchResultID(const Processing &bet)
 int BetDTO::getMatchID(const Processing &bet)
 {
     QString cmd = "SELECT id FROM matches WHERE api_id = :api_id";
-    QSqlDatabase& db = DBconnection::connection(); 
+    QSqlDatabase db = DBconnection::connection();
     QSqlQuery query(db);
     query.prepare(cmd);
     query.bindValue(":api_id", bet.getMatch().getApiID());

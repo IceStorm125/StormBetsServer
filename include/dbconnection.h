@@ -9,7 +9,7 @@ public:
     DBconnection();
     ~DBconnection();
     
-    static QSqlDatabase& connection();
+    static QSqlDatabase connection();
     static QSqlDatabase createConnection();
 private:
 };

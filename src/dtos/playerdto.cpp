@@ -19,7 +19,7 @@ PlayerDTO::PlayerDTO(int chatID_)
 int PlayerDTO::getCoins()
 {
     QString cmd("SELECT players.coins FROM players WHERE players.id=:id");
-    QSqlDatabase& db = DBconnection::connection(); 
+    QSqlDatabase db = DBconnection::connection();
     QSqlQuery query(db);
     query.prepare(cmd);
     query.bindValue(":id", chatID);
@@ -38,7 +38,7 @@ int PlayerDTO::getCoins()
 bool PlayerDTO::updateCoins(int coins)
 {
     QString cmd("UPDATE players SET players.coins = :coins WHERE players.id=:id");
-    QSqlDatabase& db = DBconnection::connection(); 
+    QSqlDatabase db = DBconnection::connection();
     QSqlQuery query(db);
     query.prepare(cmd);
     query.bindValue(":coins", coins);
@@ -50,7 +50,7 @@ bool PlayerDTO::updateCoins(int coins)
 bool PlayerDTO::add(const std::string &firstName, const std::string &lastName)
 {
     QString cmd("INSERT INTO players VALUES(:id, :coins, :firstName, :lastName)");
-    QSqlDatabase& db = DBconnection::connection(); 
+    QSqlDatabase db = DBconnection::connection();
     QSqlQuery query(db);
     query.prepare(cmd);
     query.bindValue(":id", chatID);
@@ -67,7 +67,7 @@ int PlayerDTO::getCountAll()
                  "JOIN (matches m) ON (b.match_id = m.id) "
                  "WHERE b.player_id = :id "
                  "AND b.paid IS NOT NULL");
-    QSqlDatabase& db = DBconnection::connection(); 
+    QSqlDatabase db = DBconnection::connection();
     QSqlQuery query(db);
     query.prepare(cmd1);
     query.bindValue(":id", chatID);
@@ -87,7 +87,7 @@ int PlayerDTO::getCountWin()
                  "WHERE b.player_id = :id "
                  "AND b.paid IS NOT NULL "
                  "AND b.match_result_id = m.match_result_id");
-    QSqlDatabase& db = DBconnection::connection(); 
+    QSqlDatabase db = DBconnection::connection();
     QSqlQuery query(db);
     query.prepare(cmd2);
     query.bindValue(":id", chatID);
@@ -106,7 +106,7 @@ int PlayerDTO::getTotalSpent()
                  "JOIN (matches m) ON (b.match_id = m.id) "
                  "WHERE b.player_id = :id "
                  "AND b.paid IS NOT NULL");
-    QSqlDatabase& db = DBconnection::connection(); 
+    QSqlDatabase db = DBconnection::connection();
     QSqlQuery query(db);
     query.prepare(cmd3);
     query.bindValue(":id", chatID);
@@ -126,7 +126,7 @@ int PlayerDTO::getTotalGain()
                  "WHERE b.player_id = :id "
                  "AND b.paid IS NOT NULL "
                  "AND b.match_result_id = m.match_result_id");
-    QSqlDatabase& db = DBconnection::connection(); 
+    QSqlDatabase db = DBconnection::connection();
     QSqlQuery query(db);
     query.prepare(cmd4);
     query.bindValue(":id", chatID);

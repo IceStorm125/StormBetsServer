@@ -22,7 +22,7 @@ AdminDTO::AdminDTO()
 std::vector<int> AdminDTO::getAllMatchesIdWithResult()
 {
     QString cmd = "SELECT id FROM matches WHERE match_result_id IS NOT NULL";
-    QSqlDatabase& db = DBconnection::connection();
+    QSqlDatabase db = DBconnection::connection();
     QSqlQuery query(db);
     query.prepare(cmd);
     exec(query);
@@ -50,7 +50,7 @@ void AdminDTO::registerResults(const TgBot::Bot &bot)
 bool AdminDTO::updateCoins(int matchID, const TgBot::Bot &bot)
 {
     QString selectBetsCmd("SELECT id, amount, koef, match_result_id, player_id FROM bets WHERE match_id = :matchID AND paid IS NULL");
-    QSqlDatabase& db = DBconnection::connection();
+    QSqlDatabase db = DBconnection::connection();
     QSqlQuery selectBetsQuery(db);
     selectBetsQuery.prepare(selectBetsCmd);
     selectBetsQuery.bindValue(":matchID", matchID);

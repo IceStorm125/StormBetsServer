@@ -18,7 +18,7 @@ DBconnection::~DBconnection()
 {
 }
 
-QSqlDatabase &DBconnection::connection()
+QSqlDatabase DBconnection::connection()
 {   
     thread_local QSqlDatabase db = createConnection();
     if(!db.isOpen())
