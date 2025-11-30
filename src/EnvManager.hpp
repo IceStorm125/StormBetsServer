@@ -9,9 +9,12 @@
 
 class EnvManager {
 public:
-    // Потокобезопасный доступ к единственному экземпляру
+
+    EnvManager(const EnvManager&) = delete;
+    EnvManager& operator=(const EnvManager&) = delete;
+
     static EnvManager& getInstance() {
-        static EnvManager instance; // Meyers Singleton
+        static EnvManager instance;
         return instance;
     }
 
@@ -29,22 +32,15 @@ public:
     }
 
 private:
-    // Данные
     std::unordered_map<std::string, std::string> envData_;
     bool loaded_ = false;
 
     mutable std::shared_mutex mutex_;
 
-    // Приватный конструктор (Singleton)
     explicit EnvManager(const std::string& filePath = ".env") {
         load(filePath);
     }
 
-    // Запрещаем копирование
-    EnvManager(const EnvManager&) = delete;
-    EnvManager& operator=(const EnvManager&) = delete;
-
-    // Парсинг .env
     void load(const std::string& filePath) {
         std::ifstream file(filePath);
         if (!file.is_open()) {
@@ -79,7 +75,6 @@ private:
         loaded_ = true;
     }
 
-    // trim
     static void trim(std::string& s) {
         auto notSpace = [](unsigned char ch) { return !std::isspace(ch); };
         s.erase(s.begin(), std::find_if(s.begin(), s.end(), notSpace));
