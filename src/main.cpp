@@ -425,7 +425,7 @@ int main(int argc, char *argv[]) {
     auto userSessionTread = std::thread([&userSessions, &currentProceses, &sessionMutex] {
         while (true) {
             cleanupExpiredSessions(userSessions, currentProceses, sessionMutex);
-            std::this_thread::sleep_for(std::chrono::seconds(1));
+            std::this_thread::sleep_for(std::chrono::minutes(1));
         }
     });
 
