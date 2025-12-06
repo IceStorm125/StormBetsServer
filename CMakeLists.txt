@@ -2,9 +2,15 @@ cmake_minimum_required(VERSION 3.22)
 
 project(StormBetsServer LANGUAGES CXX)
 
+if(CONAN_RESULT)
+    message(FATAL_ERROR "Failed to run conan install command")
+endif()
+
+include("${CMAKE_CURRENT_BINARY_DIR}/Release/generators/conan_toolchain.cmake")
+
 set(CMAKE_INCLUDE_CURRENT_DIR ON)
 set(CMAKE_BUILD_TYPE "Release")
-set(CMAKE_CXX_STANDARD 20)
+set(CMAKE_CXX_STANDARD 23)
 set(CMAKE_CXX_STANDARD_REQUIRED ON)
 
 
@@ -14,11 +20,7 @@ find_package(Qt5Core REQUIRED)
 find_package(Qt5Sql REQUIRED)
 
 # Check if the command was successful
-if(CONAN_RESULT)
-    message(FATAL_ERROR "Failed to run conan install command")
-endif()
 
-include("${CMAKE_CURRENT_BINARY_DIR}/Release/generators/conan_toolchain.cmake")
 
 find_package(spdlog REQUIRED)
 find_package(nlohmann_json REQUIRED)
