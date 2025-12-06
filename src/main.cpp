@@ -62,7 +62,7 @@ void cleanupExpiredSessions(
     std::unordered_map<long, std::chrono::system_clock::time_point> &userSessions,
     std::unordered_map<long, std::unique_ptr<Processing> > &currentProcesses,
     std::mutex &sessionMutex,
-    const std::chrono::seconds &timeout = std::chrono::seconds(10)
+    const std::chrono::seconds &timeout = std::chrono::minutes(10)
 ) {
     auto now = std::chrono::system_clock::now();
     std::vector<long> keysToRemove;
