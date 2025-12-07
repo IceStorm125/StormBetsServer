@@ -62,7 +62,7 @@ void cleanupExpiredSessions(
     std::unordered_map<long, std::chrono::system_clock::time_point> &userSessions,
     std::unordered_map<long, std::unique_ptr<Processing> > &currentProcesses,
     std::mutex &sessionMutex,
-    const std::chrono::seconds &timeout = std::chrono::seconds(10)
+    const std::chrono::seconds &timeout = std::chrono::minutes(10)
 ) {
     auto now = std::chrono::system_clock::now();
     std::vector<long> keysToRemove;
@@ -425,7 +425,7 @@ int main(int argc, char *argv[]) {
     auto userSessionTread = std::thread([&userSessions, &currentProceses, &sessionMutex] {
         while (true) {
             cleanupExpiredSessions(userSessions, currentProceses, sessionMutex);
-            std::this_thread::sleep_for(std::chrono::seconds(1));
+            std::this_thread::sleep_for(std::chrono::minutes(1));
         }
     });
 
