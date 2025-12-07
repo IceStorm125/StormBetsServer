@@ -3,15 +3,16 @@
 
 #include <QSqlDatabase>
 
-class DBconnection
-{
+class DBconnection {
 public:
-    DBconnection();
-    ~DBconnection();
-    
+    DBconnection() = delete;
+
     static QSqlDatabase connection();
-    static QSqlDatabase createConnection();
+
 private:
+    static QSqlDatabase createConnection();
+
+    static bool ping(QSqlDatabase &db); // 👈 объявляем функцию
 };
 
 #endif // DBCONNECTION_H
