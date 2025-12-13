@@ -12,7 +12,6 @@
 #include <thread>
 #include <memory>
 
-
 #include <boost/algorithm/string.hpp>
 
 #include "tgbot/tgbot.h"
@@ -20,12 +19,10 @@
 #include <spdlog/sinks/stdout_color_sinks.h>
 #include <spdlog/sinks/basic_file_sink.h>
 
-
 #include "processing.h"
-#include "event.h"
 #include "keyboardcreator.h"
 #include "messagestosend.h"
-#include "messageeventsgenerator.hpp"
+#include "messageeventsgenerator.h"
 #include "EnvManager.hpp"
 #include "regexmatcher.h"
 #include "dtos/playerdto.h"
@@ -195,9 +192,8 @@ int main(int argc, char *argv[]) {
 
                             std::vector<std::string> numbersToSend;
                             numbersToSend.reserve(matches.size());
-                            MessageEventsGenerator<Match> gen;
-                            std::string outMsg;
-                            gen.generateMessage(matches, outMsg, numbersToSend);
+                            std::string outMsg = MessageEventsGenerator::generateAllMatches(matches, numbersToSend);
+
                             ReplyKeyboardMarkup::Ptr kb(new ReplyKeyboardMarkup);
                             KeyboardCreator::createKeyboard(numbersToSend, kb);
                             bot.getApi().sendMessage(chatID, outMsg, 0, false, kb);

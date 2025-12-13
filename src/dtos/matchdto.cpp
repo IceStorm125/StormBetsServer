@@ -9,10 +9,11 @@
 
 std::vector<Match> MatchDTO::getAllMatches()
 {
-    QString cmd = "SELECT m.id, m.api_id, t.title, m.team1, m.team2, m.koef_W1, m.koef_X, m.koef_W2, m.time FROM matches m "
-                   "JOIN tournaments t ON t.id = m.tournament_id "
-                   "WHERE m.match_result_id IS NULL "
-                   "ORDER BY m.time;";
+    QString cmd =
+            "SELECT m.id, m.api_id, t.title, m.team1, m.team2, m.koef_W1, m.koef_X, m.koef_W2, m.time FROM matches m "
+            "JOIN tournaments t ON t.id = m.tournament_id "
+            "WHERE m.match_result_id IS NULL "
+            "ORDER BY m.time;";
     QSqlDatabase db = DBconnection::connection();
     QSqlQuery query(db);
     query.prepare(cmd);
@@ -20,8 +21,7 @@ std::vector<Match> MatchDTO::getAllMatches()
 
     std::vector<Match> matches;
 
-    while (query.next())
-    {
+    while (query.next()) {
         QSqlRecord record = query.record();
         int id = record.value(0).toInt();
         QString api_id = record.value(1).toString();

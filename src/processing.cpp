@@ -5,51 +5,41 @@
 #include <fmt/core.h>
 
 
-
-Processing::Processing(long userID_)
-{
+Processing::Processing(long userID_) {
     userID = userID_;
     status = Status::START;
 }
 
-int Processing::getUserID() const
-{
+int Processing::getUserID() const {
     return userID;
 }
 
-void Processing::setUserID(int value)
-{
+void Processing::setUserID(int value) {
     userID = value;
 }
 
-int Processing::getStatus() const
-{
+int Processing::getStatus() const {
     return status;
 }
 
-void Processing::setStatus(int value)
-{
+void Processing::setStatus(int value) {
     status = value;
 }
 
 
-int Processing::getResult() const
-{
+int Processing::getResult() const {
     return result;
 }
 
-void Processing::setResult(int value)
-{
+void Processing::setResult(int value) {
     result = value;
 }
 
-int Processing::getAmount() const
-{
+int Processing::getAmount() const {
     return amount;
 }
 
-void Processing::setAmount(int value)
-{
+void Processing::setAmount(int value) {
     amount = value;
 }
 
@@ -63,29 +53,28 @@ void Processing::setUserMatches(const std::vector<Match> &value)
     userMatches = value;
 }
 
-Match Processing::getMatch() const
-{
+Match Processing::getMatch() const {
     return match;
 }
 
-void Processing::setMatch(const Match &value)
-{
+void Processing::setMatch(const Match &value) {
     match = value;
 }
 
-std::string Processing::toPrint()
-{
+std::string Processing::toPrint() {
     std::string out = fmt::format(
         "{}"
         "Winner: {}\n"
-        "Amount: {}", 
-        match.toPrint(), (result == Processing::Result::W1 ? match.getTeam1().first.toStdString() : (result == Processing::Result::W2 ? match.getTeam2().first.toStdString() : "Draw")), amount);
+        "Amount: {}",
+        match.toPrint(),
+        (result == Processing::Result::W1
+             ? match.getTeam1().first.toStdString()
+             : (result == Processing::Result::W2 ? match.getTeam2().first.toStdString() : "Draw")), amount);
 
     return out;
 }
 
-void Processing::reset()
-{
+void Processing::reset() {
     status = Processing::Status::START;
     userMatches.clear();
     matchNumberToID.clear();
@@ -95,23 +84,19 @@ void Processing::reset()
     koef = 0;
 }
 
-std::map<int, int> Processing::getMatchNumberToID() const
-{
+std::map<int, int> Processing::getMatchNumberToID() const {
     return matchNumberToID;
 }
 
-void Processing::setMatchNumberToID(const std::map<int, int> &value)
-{
+void Processing::setMatchNumberToID(const std::map<int, int> &value) {
     matchNumberToID = value;
 }
 
-double Processing::getKoef() const
-{
+double Processing::getKoef() const {
     return koef;
 }
 
-void Processing::setKoef(double value)
-{
+void Processing::setKoef(double value) {
     koef = value;
 }
 

@@ -6,13 +6,11 @@
 #include <string>
 #include "match.h"
 
-class Processing
-{
+class Processing {
 public:
     Processing(long userID_);
 
-    enum Status
-    {
+    enum Status {
         START,
         CHOOSING_MATCH,
         CHOOSING_WINNER,
@@ -23,23 +21,26 @@ public:
         DELETTING_BET
     };
 
-    enum Result
-    {
+    enum Result {
         W1,
         X,
         W2
     };
 
     int getUserID() const;
+
     void setUserID(int value);
 
     int getStatus() const;
+
     void setStatus(int value);
 
     int getResult() const;
+
     void setResult(int value);
 
     int getAmount() const;
+
     void setAmount(int value);
 
     std::vector<Match> getUserMatches() const;
@@ -49,12 +50,15 @@ public:
     void setMatch(const Match &value);
 
     double getKoef() const;
-    void setKoef(double value); 
+
+    void setKoef(double value);
 
     std::map<int, int> getMatchNumberToID() const;
+
     void setMatchNumberToID(const std::map<int, int> &value);
 
     std::string toPrint();
+
     void reset();
 
 private:
@@ -66,7 +70,6 @@ private:
     double koef;
     int amount;
     std::map<int, int> matchNumberToID;
-
 };
 
 #endif // PROCESSING_H
