@@ -7,8 +7,7 @@
 #include <QSqlQuery>
 
 
-std::vector<Match> MatchDTO::getAllMatches()
-{
+std::vector<Match> MatchDTO::getAllMatches() {
     QString cmd =
             "SELECT m.id, m.api_id, t.title, m.team1, m.team2, m.koef_W1, m.koef_X, m.koef_W2, m.time FROM matches m "
             "JOIN tournaments t ON t.id = m.tournament_id "
@@ -33,12 +32,11 @@ std::vector<Match> MatchDTO::getAllMatches()
         double koef_W2 = record.value(7).toDouble();
         QDateTime time = record.value(8).toDateTime();
 
-        if(time > QDateTime::currentDateTime().addSecs(15*60) && time < QDateTime::currentDateTime().addDays(5))
-        {
-            Match match(id, api_id, title, team1, team2, koef_W1, koef_X, koef_W2, time);
+        if (time > QDateTime::currentDateTime().addSecs(15 * 60) && time < QDateTime::currentDateTime().addDays(5)) {
+            Match match(id, api_id.toStdString(), title.toStdString(), team1.toStdString(), team2.toStdString(),
+                        koef_W1, koef_X, koef_W2, time);
             matches.push_back(match);
         }
-        
     }
     return matches;
 }

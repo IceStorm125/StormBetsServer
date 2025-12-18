@@ -43,13 +43,11 @@ void Processing::setAmount(int value) {
     amount = value;
 }
 
-std::vector<Match> Processing::getUserMatches() const
-{
+std::vector<Match> Processing::getUserMatches() const {
     return userMatches;
 }
 
-void Processing::setUserMatches(const std::vector<Match> &value)
-{
+void Processing::setUserMatches(const std::vector<Match> &value) {
     userMatches = value;
 }
 
@@ -68,8 +66,8 @@ std::string Processing::toPrint() {
         "Amount: {}",
         match.toPrint(),
         (result == Processing::Result::W1
-             ? match.getTeam1().first.toStdString()
-             : (result == Processing::Result::W2 ? match.getTeam2().first.toStdString() : "Draw")), amount);
+             ? match.getTeam1().first
+             : (result == Processing::Result::W2 ? match.getTeam2().first : "Draw")), amount);
 
     return out;
 }

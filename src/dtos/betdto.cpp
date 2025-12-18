@@ -22,19 +22,17 @@
 
 std::string getCurrentTime() {
     static const int offset = 3;
-    return QDateTime::currentDateTime().addSecs(offset*60*60).toString("yyyy-MM-dd hh:mm:ss").toStdString();
+    return QDateTime::currentDateTime().addSecs(offset * 60 * 60).toString("yyyy-MM-dd hh:mm:ss").toStdString();
 }
 
 
-BetDTO::BetDTO(int chatID_)
-{
+BetDTO::BetDTO(int chatID_) {
     chatID = chatID_;
 }
 
-bool BetDTO::confirm(const Processing &bet)
-{
+bool BetDTO::confirm(const Processing &bet) {
     QString cmd("INSERT INTO bets(amount, koef, match_result_id, match_id, player_id, time) "
-                "VALUES(:amount, :koef, :match_result_id, :match_id, :player_id, :time);");
+        "VALUES(:amount, :koef, :match_result_id, :match_id, :player_id, :time);");
     QSqlDatabase db = DBconnection::connection();
     QSqlQuery query(db);
     query.prepare(cmd);
@@ -48,8 +46,7 @@ bool BetDTO::confirm(const Processing &bet)
     return exec(query);
 }
 
-bool BetDTO::deleteBetByID(int id)
-{
+bool BetDTO::deleteBetByID(int id) {
     QString cmd = "DELETE FROM bets WHERE id = :id;";
     QSqlDatabase db = DBconnection::connection();
     QSqlQuery query(db);
@@ -58,8 +55,7 @@ bool BetDTO::deleteBetByID(int id)
     return exec(query);
 }
 
-int BetDTO::getBetAmountByID(int id)
-{
+int BetDTO::getBetAmountByID(int id) {
     QString cmd = "SELECT amount FROM bets WHERE id = :id;";
     QSqlDatabase db = DBconnection::connection();
     QSqlQuery query(db);
@@ -67,26 +63,21 @@ int BetDTO::getBetAmountByID(int id)
     query.bindValue(":id", id);
     exec(query);
 
-    if (query.next())
-    {
+    if (query.next()) {
         QSqlRecord record = query.record();
         int amount = record.value(0).toInt();
         return amount;
-    }
-    else
-    {
+    } else {
         spdlog::warn("getBetAmountByID" + query.lastError().text().toStdString());
-
     }
     return 0;
 }
 
-std::string BetDTO::playerCurrentBets()
-{
+std::string BetDTO::playerCurrentBets() {
     QString cmd = "SELECT b.amount, b.koef, mr.name, m.team1, m.team2, m.time FROM bets b "
-                  "JOIN (matches m, match_results mr) ON (m.id = b.match_id AND mr.id = b.match_result_id) "
-                  "WHERE player_id = :chatID AND m.match_result_id IS NULL "
-                  "ORDER BY m.time ASC;";
+            "JOIN (matches m, match_results mr) ON (m.id = b.match_id AND mr.id = b.match_result_id) "
+            "WHERE player_id = :chatID AND m.match_result_id IS NULL "
+            "ORDER BY m.time ASC;";
     QSqlDatabase db = DBconnection::connection();
     QSqlQuery query(db);
     query.prepare(cmd);
@@ -94,8 +85,7 @@ std::string BetDTO::playerCurrentBets()
     exec(query);
 
     std::string out{""};
-    while (query.next())
-    {
+    while (query.next()) {
         QSqlRecord record = query.record();
         int amount = record.value(0).toInt();
         double koef = record.value(1).toDouble();
@@ -105,22 +95,23 @@ std::string BetDTO::playerCurrentBets()
         QDateTime time = record.value(5).toDateTime();
 
         out += fmt::format("{} vs {}\n"
-                          "Result: {}({})\n"
-                          "Bet: {} -> {}\n"
-                          "Time: {}\n\n",
-                          team1.toStdString(), team2.toStdString(), matchRes.toStdString(), koef, amount, static_cast<int>(amount * koef), 
-                          time.toString("dd.MM.yyyy hh:mm").toStdString());
+                           "Result: {}({})\n"
+                           "Bet: {} -> {}\n"
+                           "Time: {}\n\n",
+                           team1.toStdString(), team2.toStdString(), matchRes.toStdString(), koef, amount,
+                           static_cast<int>(amount * koef),
+                           time.toString("dd.MM.yyyy hh:mm").toStdString());
     }
 
     return out;
 }
 
-std::string BetDTO::playerCurrentBetsToDelete(std::map<int, int> &betNumberToID)
-{
-    QString cmd = "SELECT b.amount, b.koef, mr.name, m.team1, m.team2, m.time, ROW_NUMBER() OVER( ORDER BY m.time DESC) AS 'rownumber', b.id FROM bets b "
-                  "JOIN (matches m, match_results mr) ON (m.id = b.match_id AND mr.id = b.match_result_id) "
-                  "WHERE player_id = :chatID AND m.match_result_id IS NULL "
-                  "ORDER BY m.time ASC;";
+std::string BetDTO::playerCurrentBetsToDelete(std::map<int, int> &betNumberToID) {
+    QString cmd =
+            "SELECT b.amount, b.koef, mr.name, m.team1, m.team2, m.time, ROW_NUMBER() OVER( ORDER BY m.time DESC) AS 'rownumber', b.id FROM bets b "
+            "JOIN (matches m, match_results mr) ON (m.id = b.match_id AND mr.id = b.match_result_id) "
+            "WHERE player_id = :chatID AND m.match_result_id IS NULL "
+            "ORDER BY m.time ASC;";
     QSqlDatabase db = DBconnection::connection();
     QSqlQuery query(db);
     query.prepare(cmd);
@@ -129,8 +120,7 @@ std::string BetDTO::playerCurrentBetsToDelete(std::map<int, int> &betNumberToID)
 
     std::string out{""};
 
-    while (query.next())
-    {
+    while (query.next()) {
         QSqlRecord record = query.record();
         int amount = record.value(0).toInt();
         double koef = record.value(1).toDouble();
@@ -142,11 +132,12 @@ std::string BetDTO::playerCurrentBetsToDelete(std::map<int, int> &betNumberToID)
         int ID = record.value(7).toInt();
 
         out += fmt::format("{}. {} vs {}\n"
-                          "Result: {}({})\n"
-                          "Bet: {} -> {}\n"
-                          "Time: {}\n\n",
-                          number, team1.toStdString(), team2.toStdString(), matchRes.toStdString(), koef, amount, static_cast<int>(amount * koef), 
-                          time.toString("dd.MM.yyyy hh:mm").toStdString());
+                           "Result: {}({})\n"
+                           "Bet: {} -> {}\n"
+                           "Time: {}\n\n",
+                           number, team1.toStdString(), team2.toStdString(), matchRes.toStdString(), koef, amount,
+                           static_cast<int>(amount * koef),
+                           time.toString("dd.MM.yyyy hh:mm").toStdString());
 
         betNumberToID.insert({number, ID});
     }
@@ -154,13 +145,13 @@ std::string BetDTO::playerCurrentBetsToDelete(std::map<int, int> &betNumberToID)
     return out;
 }
 
-std::string BetDTO::playerPlayedBets(int limit)
-{
-    QString cmd = "SELECT b.amount, b.koef, b.match_result_id, m.team1, m.team2, m.match_result_id, mr.name, br.name FROM bets b "
-                  "JOIN (matches m, match_results br, match_results mr) ON (m.id = b.match_id AND br.id = b.match_result_id AND mr.id = m.match_result_id) "
-                  "WHERE player_id = :chatID AND m.match_result_id IS NOT NULL "
-                  "ORDER BY m.time DESC "
-                  "LIMIT :limit;";
+std::string BetDTO::playerPlayedBets(int limit) {
+    QString cmd =
+            "SELECT b.amount, b.koef, b.match_result_id, m.team1, m.team2, m.match_result_id, mr.name, br.name FROM bets b "
+            "JOIN (matches m, match_results br, match_results mr) ON (m.id = b.match_id AND br.id = b.match_result_id AND mr.id = m.match_result_id) "
+            "WHERE player_id = :chatID AND m.match_result_id IS NOT NULL "
+            "ORDER BY m.time DESC "
+            "LIMIT :limit;";
     QSqlDatabase db = DBconnection::connection();
     QSqlQuery query(db);
     query.prepare(cmd);
@@ -168,17 +159,15 @@ std::string BetDTO::playerPlayedBets(int limit)
     query.bindValue(":limit", limit);
     exec(query);
 
-    
-    if(!query.size())
-    {
+
+    if (!query.size()) {
         return "You don't have played bets";
     }
 
-    std::string out {""};
+    std::string out{""};
     out += "Last played bets\n\n";
 
-    while (query.next())
-    {
+    while (query.next()) {
         QSqlRecord record = query.record();
         int amount = record.value(0).toInt();
         double koef = record.value(1).toDouble();
@@ -191,16 +180,14 @@ std::string BetDTO::playerPlayedBets(int limit)
 
         out += fmt::format("{} vs {}({})\n"
                            "Bet: {} on {}({})\n",
-                           team1.toStdString(), team2.toStdString(), matchRes.toStdString(), amount, choosedRes.toStdString(), koef);
+                           team1.toStdString(), team2.toStdString(), matchRes.toStdString(), amount,
+                           choosedRes.toStdString(), koef);
 
-        if(betResID == matchResID)
-        {
+        if (betResID == matchResID) {
             out += fmt::format("Result: {}\n"
                                "Coins change: +{}\n\n",
                                Emojis::CHECK_MARK, static_cast<int>(amount * koef));
-        }
-        else
-        {
+        } else {
             out += fmt::format("Result: {}\n"
                                "Coins change: -{}\n\n",
                                Emojis::CROSS_MARK, amount);
@@ -210,48 +197,42 @@ std::string BetDTO::playerPlayedBets(int limit)
     return out;
 }
 
-int BetDTO::getMatchResultID(const Processing &bet)
-{
+int BetDTO::getMatchResultID(const Processing &bet) {
     QString cmd = "SELECT id FROM match_results WHERE name = :name";
     QSqlDatabase db = DBconnection::connection();
     QSqlQuery query(db);
     query.prepare(cmd);
-    query.bindValue(":name", bet.getResult() == Processing::Result::W1 ? "W1" : bet.getResult() == Processing::Result::W2 ? "W2" : "X");
+    query.bindValue(":name", bet.getResult() == Processing::Result::W1
+                                 ? "W1"
+                                 : bet.getResult() == Processing::Result::W2
+                                       ? "W2"
+                                       : "X");
     exec(query);
 
-    if (query.next())
-    {
+    if (query.next()) {
         QSqlRecord record = query.record();
         int matchResultID = record.value(0).toInt();
         return matchResultID;
-    }
-    else
-    {
+    } else {
         spdlog::warn("getMatchResultID" + query.lastError().text().toStdString());
-
     }
     return 0;
 }
 
-int BetDTO::getMatchID(const Processing &bet)
-{
+int BetDTO::getMatchID(const Processing &bet) {
     QString cmd = "SELECT id FROM matches WHERE api_id = :api_id";
     QSqlDatabase db = DBconnection::connection();
     QSqlQuery query(db);
     query.prepare(cmd);
-    query.bindValue(":api_id", bet.getMatch().getApiID());
+    query.bindValue(":api_id", QString::fromStdString(bet.getMatch().getApiID()));
     exec(query);
 
-    if (query.next())
-    {
+    if (query.next()) {
         QSqlRecord record = query.record();
         int matchID = record.value(0).toInt();
         return matchID;
-    }
-    else
-    {
+    } else {
         spdlog::warn("getMatchID" + query.lastError().text().toStdString());
-
     }
     return 0;
 }

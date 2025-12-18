@@ -9,19 +9,19 @@ class Match {
 public:
     Match();
 
-    Match(int ID_, const QString api_id_, const QString &tournamentName_, const QString &teamName1,
-          const QString &teamName2, double koef1, double koefDraw_, double koef2, const QDateTime &time_);
+    Match(int ID_, const std::string api_id_, const std::string &tournamentName_, const std::string &teamName1,
+          const std::string &teamName2, double koef1, double koefDraw_, double koef2, const QDateTime &time_);
 
 
     std::string toPrint();
 
     int getID() const;
 
-    QString getApiID() const;
+    std::string getApiID() const;
 
-    QPair<QString, double> getTeam1() const;
+    std::pair<std::string, double> getTeam1() const;
 
-    QPair<QString, double> getTeam2() const;
+    std::pair<std::string, double> getTeam2() const;
 
     QDateTime getTime() const;
 
@@ -29,10 +29,10 @@ public:
 
 private:
     int ID;
-    QString api_id;
-    QString tournamentName;
-    QPair<QString, double> team1;
-    QPair<QString, double> team2;
+    std::string api_id;
+    std::string tournamentName;
+    std::pair<std::string, double> team1;
+    std::pair<std::string, double> team2;
     double koefDraw;
     QDateTime time;
 };

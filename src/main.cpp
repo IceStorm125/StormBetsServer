@@ -140,7 +140,7 @@ int main(int argc, char *argv[]) {
 
             const long chatID{message->chat->id};
 
-            bot.getApi().sendMessage(chatID, std::string(Messages::CHOOSE_OPTION), 0, false, menuKeyboard);
+            bot.getApi().sendMessage(chatID, std::string(Messages::CHOOSE_OPTION), nullptr, nullptr, menuKeyboard);
 
             {
                 std::lock_guard m(sessionMutex);
@@ -170,24 +170,24 @@ int main(int argc, char *argv[]) {
                 return;
 
             if (auto it = currentProceses.find(chatID); it == currentProceses.end()) {
-                bot.getApi().sendMessage(chatID, std::string(Messages::LOGIN), false, 0, ptrForRemoveKeyboard);
+                bot.getApi().sendMessage(chatID, std::string(Messages::LOGIN), nullptr, nullptr, ptrForRemoveKeyboard);
                 return;
             } else {
                 Processing &current = *(it->second);
                 switch (current.getStatus()) {
                     case Processing::Status::START: {
                         if (message->text == std::string(Messages::PLACE_BET)) {
-                            bot.getApi().sendMessage(chatID, std::string(Messages::LOADING), 0, false,
+                            bot.getApi().sendMessage(chatID, std::string(Messages::LOADING), nullptr, nullptr,
                                                      ptrForRemoveKeyboard);
                             MatchDTO mdto;
                             std::vector<Match> matches = mdto.getAllMatches();
                             if (matches.empty()) {
-                                bot.getApi().sendMessage(chatID, std::string(Messages::NO_MATCHES), 0, false,
+                                bot.getApi().sendMessage(chatID, std::string(Messages::NO_MATCHES), nullptr, nullptr,
                                                          menuKeyboard);
                                 break;
                             }
 
-                            bot.getApi().sendMessage(chatID, std::string(Messages::CHOOSE_MATCH), 0, false,
+                            bot.getApi().sendMessage(chatID, std::string(Messages::CHOOSE_MATCH), nullptr, nullptr,
                                                      ptrForRemoveKeyboard);
 
                             std::vector<std::string> numbersToSend;
@@ -196,7 +196,7 @@ int main(int argc, char *argv[]) {
 
                             ReplyKeyboardMarkup::Ptr kb(new ReplyKeyboardMarkup);
                             KeyboardCreator::createKeyboard(numbersToSend, kb);
-                            bot.getApi().sendMessage(chatID, outMsg, 0, false, kb);
+                            bot.getApi().sendMessage(chatID, outMsg, nullptr, nullptr, kb);
 
                             current.setUserMatches(matches);
                             current.setStatus(Processing::Status::CHOOSING_MATCH);
@@ -231,7 +231,8 @@ int main(int argc, char *argv[]) {
                             if (playerCurrentBetsStr.empty()) {
                                 bot.getApi().sendMessage(chatID, std::string(Messages::NO_BETS));
                             } else {
-                                bot.getApi().sendMessage(chatID, std::string(Messages::CHOOSE_BET_TO_DELETE), 0, false,
+                                bot.getApi().sendMessage(chatID, std::string(Messages::CHOOSE_BET_TO_DELETE), nullptr,
+                                                         nullptr,
                                                          ptrForRemoveKeyboard);
                                 current.setMatchNumberToID(betNumbersToID);
 
@@ -246,18 +247,19 @@ int main(int argc, char *argv[]) {
 
                                 ReplyKeyboardMarkup::Ptr kb(new ReplyKeyboardMarkup);
                                 KeyboardCreator::createOneColumnKeyboard(numbersToSend, kb);
-                                bot.getApi().sendMessage(chatID, playerCurrentBetsStr, false, 0, kb);
+                                bot.getApi().sendMessage(chatID, playerCurrentBetsStr, nullptr, nullptr, kb);
                                 break;
                             }
                         }
                         if (message->text == std::string(Messages::STATS)) {
                             PlayerDTO dto(chatID);
                             std::string statsStr = dto.getStats();
-                            bot.getApi().sendMessage(chatID, statsStr, 0, false, menuKeyboard);
+                            bot.getApi().sendMessage(chatID, statsStr, nullptr, nullptr, menuKeyboard);
                             break;
                         }
 
-                        bot.getApi().sendMessage(chatID, std::string(Messages::CHOOSE_OPTION), 0, false, menuKeyboard);
+                        bot.getApi().sendMessage(chatID, std::string(Messages::CHOOSE_OPTION), nullptr, nullptr,
+                                                 menuKeyboard);
 
                         break;
                     }
@@ -274,17 +276,18 @@ int main(int argc, char *argv[]) {
 
                             if (match.getKoefDraw() != 0)
                                 KeyboardCreator::createOneColumnKeyboard({
-                                                                             match.getTeam1().first.toStdString(),
+                                                                             match.getTeam1().first,
                                                                              "Draw",
-                                                                             match.getTeam2().first.toStdString()
+                                                                             match.getTeam2().first
                                                                          }, kb);
                             else
                                 KeyboardCreator::createOneColumnKeyboard({
-                                                                             match.getTeam1().first.toStdString(),
-                                                                             match.getTeam2().first.toStdString()
+                                                                             match.getTeam1().first,
+                                                                             match.getTeam2().first
                                                                          }, kb);
 
-                            bot.getApi().sendMessage(chatID, std::string(Messages::CHOOSE_WINNER), 0, false, kb);
+                            bot.getApi().sendMessage(chatID, std::string(Messages::CHOOSE_WINNER), nullptr, nullptr,
+                                                     kb);
                         } else {
                             bot.getApi().sendMessage(chatID, std::string(Messages::CHOOSE_NUMBER));
                         }
@@ -293,10 +296,10 @@ int main(int argc, char *argv[]) {
                     }
                     case Processing::Status::CHOOSING_WINNER: {
                         if (const Match match = current.getMatch();
-                            message->text == match.getTeam1().first.toStdString()) {
+                            message->text == match.getTeam1().first) {
                             current.setResult(Processing::Result::W1);
                             current.setKoef(match.getTeam1().second);
-                        } else if (message->text == match.getTeam2().first.toStdString()) {
+                        } else if (message->text == match.getTeam2().first) {
                             current.setResult(Processing::Result::W2);
                             current.setKoef(match.getTeam2().second);
                         } else if (message->text == "Draw") {
@@ -306,7 +309,7 @@ int main(int argc, char *argv[]) {
                             bot.getApi().sendMessage(chatID, std::string(Messages::CHOOSE_WINNER));
                             break;
                         }
-                        bot.getApi().sendMessage(chatID, std::string(Messages::INPUT_AMOUNT), 0, false,
+                        bot.getApi().sendMessage(chatID, std::string(Messages::INPUT_AMOUNT), nullptr, nullptr,
                                                  ptrForRemoveKeyboard);
                         current.setStatus(Processing::Status::CHOOSING_AMOUNT);
 
@@ -314,12 +317,12 @@ int main(int argc, char *argv[]) {
                     }
                     case Processing::Status::CHOOSING_AMOUNT: {
                         if (message->text.size() > 10) {
-                            bot.getApi().sendMessage(chatID, std::string(Messages::LARGE_NUMBER), 0, false,
+                            bot.getApi().sendMessage(chatID, std::string(Messages::LARGE_NUMBER), nullptr, nullptr,
                                                      ptrForRemoveKeyboard);
                             break;
                         }
                         if (!RegexMatcher::isStringPositiveNumber(message->text)) {
-                            bot.getApi().sendMessage(chatID, std::string(Messages::INPUT_AMOUNT), 0, false,
+                            bot.getApi().sendMessage(chatID, std::string(Messages::INPUT_AMOUNT), nullptr, nullptr,
                                                      ptrForRemoveKeyboard);
                             break;
                         }
@@ -330,7 +333,7 @@ int main(int argc, char *argv[]) {
 
                         if (coins < amount) {
                             bot.getApi().sendMessage(chatID, fmt::format("You have only {}{}", coins, Emojis::MONEY),
-                                                     0, false, ptrForRemoveKeyboard);
+                                                     nullptr, nullptr, ptrForRemoveKeyboard);
                             break;
                         }
 
@@ -343,7 +346,7 @@ int main(int argc, char *argv[]) {
                                                                      std::string(Messages::CONFIRM),
                                                                      std::string(Messages::RESET)
                                                                  }, kb);
-                        bot.getApi().sendMessage(chatID, current.toPrint(), 0, false, kb);
+                        bot.getApi().sendMessage(chatID, current.toPrint(), nullptr, nullptr, kb);
                         break;
                     }
                     case Processing::Status::ACCEPTING: {
@@ -353,17 +356,18 @@ int main(int argc, char *argv[]) {
                                 PlayerDTO pdto(chatID);
                                 const int coins = pdto.getCoins();
                                 pdto.updateCoins(coins - current.getAmount());
-                                bot.getApi().sendMessage(chatID, std::string(Messages::CONFIRMED), 0, false,
+                                bot.getApi().sendMessage(chatID, std::string(Messages::CONFIRMED), nullptr, nullptr,
                                                          ptrForRemoveKeyboard);
                             }
                         } else if (message->text == std::string(Messages::RESET)) {
-                            bot.getApi().sendMessage(chatID, std::string(Messages::RESETED), 0, false,
+                            bot.getApi().sendMessage(chatID, std::string(Messages::RESETED), nullptr, nullptr,
                                                      ptrForRemoveKeyboard);
                         } else {
                             break;
                         }
                         current.reset();
-                        bot.getApi().sendMessage(chatID, std::string(Messages::CHOOSE_OPTION), 0, false, menuKeyboard);
+                        bot.getApi().sendMessage(chatID, std::string(Messages::CHOOSE_OPTION), nullptr, nullptr,
+                                                 menuKeyboard);
 
                         break;
                     }
@@ -396,7 +400,8 @@ int main(int argc, char *argv[]) {
                         bot.getApi().sendMessage(chatID, "Bet deleted. You got " + returnAmountstr + " coins back.");
 
                         current.reset();
-                        bot.getApi().sendMessage(chatID, std::string(Messages::CHOOSE_OPTION), 0, false, menuKeyboard);
+                        bot.getApi().sendMessage(chatID, std::string(Messages::CHOOSE_OPTION), nullptr, nullptr,
+                                                 menuKeyboard);
 
                         break;
                     }

@@ -4,13 +4,11 @@
 
 #include <fmt/core.h>
 
-Match::Match()
-{
-
+Match::Match() {
 }
 
-Match::Match(int ID_, const QString api_id_, const QString &tournamentName_, const QString &teamName1, const QString &teamName2, double koef1, double koefDraw_, double koef2, const QDateTime &time_)
-{
+Match::Match(int ID_, const std::string api_id_, const std::string &tournamentName_, const std::string &teamName1,
+             const std::string &teamName2, double koef1, double koefDraw_, double koef2, const QDateTime &time_) {
     ID = ID_;
     api_id = api_id_;
     tournamentName = tournamentName_;
@@ -20,43 +18,36 @@ Match::Match(int ID_, const QString api_id_, const QString &tournamentName_, con
     time = time_;
 }
 
-std::string Match::toPrint()
-{
-    std::string out = fmt::format("{} ({}) vs {} ({})\n", team1.first.toStdString(), team1.second, team2.first.toStdString(), team2.second);
-    out += fmt::format("Tournament: {}\n", tournamentName.toStdString());
-    if(koefDraw != 0) out+= fmt::format("Draw: {}\n", koefDraw);
-    out += fmt::format("{}\n\n", time.addSecs(3*60*60).toString("dd.MM.yyyy hh:mm").toStdString());
+std::string Match::toPrint() {
+    std::string out = fmt::format("{} ({}) vs {} ({})\n", team1.first, team1.second, team2.first, team2.second);
+    out += fmt::format("Tournament: {}\n", tournamentName);
+    if (koefDraw != 0) out += fmt::format("Draw: {}\n", koefDraw);
+    out += fmt::format("{}\n\n", time.addSecs(3 * 60 * 60).toString("dd.MM.yyyy hh:mm").toStdString());
 
     return out;
 }
 
-int Match::getID() const
-{
+int Match::getID() const {
     return ID;
 }
 
-QString Match::getApiID() const
-{
+std::string Match::getApiID() const {
     return api_id;
 }
 
-QPair<QString, double> Match::getTeam1() const
-{
+std::pair<std::string, double> Match::getTeam1() const {
     return team1;
 }
 
-QPair<QString, double> Match::getTeam2() const
-{
+std::pair<std::string, double> Match::getTeam2() const {
     return team2;
 }
 
-QDateTime Match::getTime() const
-{
+QDateTime Match::getTime() const {
     return time;
 }
 
-double Match::getKoefDraw() const
-{
+double Match::getKoefDraw() const {
     return koefDraw;
 }
 
