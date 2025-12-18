@@ -341,6 +341,7 @@ int main(int argc, char *argv[]) {
                         current.setStatus(Processing::Status::ACCEPTING);
 
                         bot.getApi().sendMessage(chatID, std::string(Messages::CONFIRM_BET));
+
                         ReplyKeyboardMarkup::Ptr kb(new ReplyKeyboardMarkup);
                         KeyboardCreator::createOneColumnKeyboard({
                                                                      std::string(Messages::CONFIRM),

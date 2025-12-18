@@ -1,32 +1,28 @@
 #include "keyboardcreator.h"
 
-KeyboardCreator::KeyboardCreator()
-{
-
+KeyboardCreator::KeyboardCreator() {
 }
 
-void KeyboardCreator::createKeyboard(const std::vector<std::string> &buttonStrings, TgBot::ReplyKeyboardMarkup::Ptr &kb, int columns)
-{
+void KeyboardCreator::createKeyboard(const std::vector<std::string> &buttonStrings, TgBot::ReplyKeyboardMarkup::Ptr &kb,
+                                     int columns) {
     std::vector<TgBot::KeyboardButton::Ptr> row;
-    for (size_t i = 0; i < buttonStrings.size(); ++i)
-    {
+    for (size_t i = 0; i < buttonStrings.size(); ++i) {
         TgBot::KeyboardButton::Ptr button(new TgBot::KeyboardButton);
         button->text = buttonStrings.at(i);
         row.push_back(button);
-        if ((i + 1) % columns == 0 || i == buttonStrings.size() - 1)
-        {
+        if ((i + 1) % columns == 0 || i == buttonStrings.size() - 1) {
             kb->keyboard.push_back(row);
             row.clear();
         }
     }
     kb->oneTimeKeyboard = true;
     kb->resizeKeyboard = true;
+    kb->request_contact = false;
 }
 
-void KeyboardCreator::createOneColumnKeyboard(const std::vector<std::string> &buttonStrings, TgBot::ReplyKeyboardMarkup::Ptr &kb)
-{
-    for (size_t i = 0; i < buttonStrings.size(); ++i)
-    {
+void KeyboardCreator::createOneColumnKeyboard(const std::vector<std::string> &buttonStrings,
+                                              TgBot::ReplyKeyboardMarkup::Ptr &kb) {
+    for (size_t i = 0; i < buttonStrings.size(); ++i) {
         std::vector<TgBot::KeyboardButton::Ptr> row;
         TgBot::KeyboardButton::Ptr button(new TgBot::KeyboardButton);
         button->text = buttonStrings.at(i);
@@ -35,4 +31,5 @@ void KeyboardCreator::createOneColumnKeyboard(const std::vector<std::string> &bu
     }
     kb->oneTimeKeyboard = true;
     kb->resizeKeyboard = true;
+    kb->request_contact = false;
 }
