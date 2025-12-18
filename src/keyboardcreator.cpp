@@ -9,6 +9,7 @@ void KeyboardCreator::createKeyboard(const std::vector<std::string> &buttonStrin
     for (size_t i = 0; i < buttonStrings.size(); ++i) {
         TgBot::KeyboardButton::Ptr button(new TgBot::KeyboardButton);
         button->text = buttonStrings.at(i);
+        button->requestContact = false;
         row.push_back(button);
         if ((i + 1) % columns == 0 || i == buttonStrings.size() - 1) {
             kb->keyboard.push_back(row);
@@ -17,7 +18,6 @@ void KeyboardCreator::createKeyboard(const std::vector<std::string> &buttonStrin
     }
     kb->oneTimeKeyboard = true;
     kb->resizeKeyboard = true;
-    kb->request_contact = false;
 }
 
 void KeyboardCreator::createOneColumnKeyboard(const std::vector<std::string> &buttonStrings,
@@ -26,10 +26,10 @@ void KeyboardCreator::createOneColumnKeyboard(const std::vector<std::string> &bu
         std::vector<TgBot::KeyboardButton::Ptr> row;
         TgBot::KeyboardButton::Ptr button(new TgBot::KeyboardButton);
         button->text = buttonStrings.at(i);
+        button->requestContact = false;
         row.push_back(button);
         kb->keyboard.push_back(row);
     }
     kb->oneTimeKeyboard = true;
     kb->resizeKeyboard = true;
-    kb->request_contact = false;
 }
