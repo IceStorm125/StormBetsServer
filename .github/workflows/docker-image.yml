@@ -15,6 +15,12 @@ jobs:
       with:
         submodules: recursive
         lfs: true
+        
+    - name: Build test image
+      run: docker build --target test -t storm_bets_bot:test .
+      
+    - name: Run tests inside container 
+      run: docker run --rm storm_bets_bot:test
 
     - name: Build the Docker image (runtime stage)
       run: docker build . --file Dockerfile --target runtime --tag icestorm125/storm_bets_bot:latest
