@@ -83,6 +83,7 @@ target_link_libraries(StormBetsServer
         date::date
 )
 
+enable_testing()
 add_executable(tests
         ${tests_sources}
         ${source_files}

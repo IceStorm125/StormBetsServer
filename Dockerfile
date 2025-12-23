@@ -3,7 +3,6 @@
 # ---------------------------------------------------------
 FROM debian:trixie AS builder
 
-# Установка build-зависимостей
 RUN apt-get update && apt-get install -y \
     g++ cmake make \
     python3 python3-pip python3-venv python3-setuptools python3-wheel \
@@ -18,14 +17,11 @@ RUN apt-get update && apt-get install -y \
 
 
 WORKDIR /app
-
-# Копируем только Conan-манифесты сначала — для кэширования зависимостей
 COPY conanfile.* ./
 
 RUN conan profile detect --force
 RUN conan install . -s compiler.cppstd=23 --build=missing
 
-# Копируем оставшиеся файлы
 COPY tgbot-cpp ./tgbot-cpp/
 COPY CMakeLists.txt ./
 COPY src/ ./src/
@@ -34,11 +30,19 @@ COPY tests/ ./tests/
 COPY wait-for-it.sh ./
 
 RUN chmod +x /app/wait-for-it.sh
-# Сборка проекта
 RUN mkdir -p build && cd build && cmake .. && make -j4
 
 # ---------------------------------------------------------
-# 2) Runtime stage (минимальный образ)
+# 2) Test stage
+# ---------------------------------------------------------
+FROM builder AS test
+
+WORKDIR /app/build
+
+CMD ["ctest", "--output-on-failure"]
+
+# ---------------------------------------------------------
+# 3) Runtime stage
 # ---------------------------------------------------------
 FROM debian:trixie AS runtime
 
@@ -51,7 +55,6 @@ RUN apt-get update && apt-get install -y \
     libqt5network5 \
     libqt5sql5-mysql \
     && rm -rf /var/lib/apt/lists/*
-
 
 WORKDIR /app
 
