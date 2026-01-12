@@ -32,7 +32,7 @@ std::vector<Match> MatchDTO::getAllMatches() {
         double koef_W2 = record.value(7).toDouble();
         QDateTime time = record.value(8).toDateTime();
 
-        if (time > QDateTime::currentDateTime().addSecs(15 * 60) && time < QDateTime::currentDateTime().addDays(5)) {
+        if (time > QDateTime::currentDateTime().addSecs(15 * 60) && time < QDateTime::currentDateTime().addDays(7)) {
             Match match(id, api_id.toStdString(), title.toStdString(), team1.toStdString(), team2.toStdString(),
                         koef_W1, koef_X, koef_W2, time);
             matches.push_back(match);
